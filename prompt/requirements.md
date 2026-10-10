@@ -112,4 +112,4 @@
 | `f07e707` | Allodox 改为 2024；After Dada、2000s Game Zine、DADA Newspaper 改为 2025；轮播是否换掉 After Dada 待定 |
 | `16be6b9` | Planting Pen 草图 ↔ 渲染图互换，删掉方盒草图和 CLOSED FORM |
 | `842bbcf` | 用我的文本描述更新作品名、副标题和说明；图集按草图 → 场景 → 小物件 → 周边排序；新增 2023 年的 Restaurant；NEXT WORK 不触碰时不透明度 80%；WORK 卡片小图由 `D1/tools/thumbs.ps1` 生成 |
-| （本次） | 修复返回 WORK 后再点作品卡住（预览服务器并行处理）；标签改为来自描述的类别，VIDEO 自动添加 |
+| `21d1d70` | 修复返回 WORK 后再点作品卡住（预览服务器并行处理）；标签改为来自描述的类别，VIDEO 自动添加 |
