@@ -106,7 +106,7 @@ const PROJECTS = [
     ],
   },
   {
-    slug: 'code-for-fun', title: 'Code For Fun: Where Play Meets Purpose', year: 2025, tags: ['BRAND', 'SPACE', 'UI'], cover: 0, big: [3, 10],
+    slug: 'code-for-fun', title: 'Code For Fun: Where Play Meets Purpose', year: 2025, tags: ['BRAND', 'SPACE', 'UI'], cover: 0, big: [2, 10],
     subtitle: 'Brand identity, space, UI',
     text: [
       `Code For Fun is a coding education brand for kids aged 9 and up. Kids want fun, parents want real outcomes, and schools need something that can scale. Most platforms are only playful or too academic. I wanted one brand that is playful but serious.`,

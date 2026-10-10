@@ -192,8 +192,8 @@ const MEDIA = {
   'code-for-fun': [
     { type: 'video', src: 'assets/work/code-for-fun/01.mp4', poster: 'assets/work/code-for-fun/01-poster.jpg', w: 2180, h: 900 },
     { src: 'assets/work/code-for-fun/02.jpg', w: 2400, h: 1050 },
-    { src: 'assets/work/code-for-fun/03.jpg', w: 1264, h: 848 },
-    { src: 'assets/work/code-for-fun/04.jpg', w: 2400, h: 1339 },
+    { src: 'assets/work/code-for-fun/03.jpg', w: 2400, h: 1339 },
+    { src: 'assets/work/code-for-fun/04.jpg', w: 1264, h: 848 },
     { src: 'assets/work/code-for-fun/05.jpg', w: 1584, h: 672 },
     { src: 'assets/work/code-for-fun/06.jpg', w: 2400, h: 908 },
     { src: 'assets/work/code-for-fun/07.jpg', w: 2400, h: 1600 },
