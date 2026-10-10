@@ -8,6 +8,20 @@ const coverItem = (p) => mediaOf(p)[p.cover || 0];
 const coverSrc = (p) => { const m = coverItem(p); return m && (m.poster || m.src); };
 const videoOf = (p) => (p.hoverVideo != null ? mediaOf(p)[p.hoverVideo] : mediaOf(p).find((m) => m.type === 'video'));
 const projectUrl = (p) => `project.html?p=${encodeURIComponent(p.slug)}`;
+
+/* Phones and tablets have no hover: every video plays by itself, muted, while it is
+   on screen, and stops when it leaves. `el.__clip(make)` lets a card build its
+   video only once it first comes into view */
+const TOUCH = !matchMedia('(hover: hover) and (pointer: fine)').matches;
+const onScreen = new IntersectionObserver((entries) => entries.forEach((e) => {
+  const v = e.target.tagName === 'VIDEO' ? e.target : e.target.__clip?.(e.isIntersecting);
+  if (!v) return;
+  if (e.isIntersecting) v.play().catch(() => {}); else v.pause();
+}), { threshold: 0.35 });
+function autoplayInView(el) {
+  if (el.tagName === 'VIDEO') { el.muted = true; el.playsInline = true; }
+  onScreen.observe(el);
+}
 const tagsHtml = (tags) => `<ul class="tags">${tags.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>`;
 // tags come from each description's category line; VIDEO is never written by hand,
 // every work with a film gets it
@@ -418,6 +432,11 @@ function createFxFlow(canvas) {
     mx = e.clientX; my = e.clientY; onTarget = 1; lastMove = performance.now();
   }, { passive: true });
   document.addEventListener('pointerleave', () => { onTarget = 0; });
+  // a finger lifting is a mouse leaving: let the picture settle, and don't read the next
+  // touch, wherever it lands, as one huge flick from here
+  const lift = (e) => { if (e.pointerType !== 'mouse') { onTarget = 0; lastT = 0; } };
+  addEventListener('pointerup', lift);
+  addEventListener('pointercancel', lift);
 
   let sx = 0, sy = 0, prev = 0, cur = 0;
   const frame = (now) => {
@@ -904,14 +923,21 @@ function renderCards(root) {
     const m = videoOf(p);
     if (!m) return;
     let v = null;
-    card.addEventListener('pointerenter', () => {
+    const make = () => {
       if (!v) {
-        v = videoEl(m, p.start, { poster: null, preload: 'auto' });
+        v = videoEl(m, p.start, { poster: null, preload: TOUCH ? 'metadata' : 'auto' });
         v.addEventListener('playing', () => card.classList.add('is-playing'));
         card.querySelector('img').after(v);
       }
-      v.play().catch(() => {});
-    });
+      return v;
+    };
+    // on a phone the clip plays while the card is on screen, no touch needed
+    if (TOUCH) {
+      card.__clip = (inView) => (inView ? make() : v);
+      autoplayInView(card);
+      return;
+    }
+    card.addEventListener('pointerenter', () => make().play().catch(() => {}));
     card.addEventListener('pointerleave', () => { v?.pause(); card.classList.remove('is-playing'); });
   });
   setupFollow('.card');
@@ -946,11 +972,13 @@ function renderProject(root) {
       seq.map((m, i) => `<img src="${m.src}" alt="${esc(p.title)}"${i ? '' : ' class="is-on"'} decoding="async">`).join('')}</figure>`
     : '';
 
+  // gallery videos: click to play with controls; on a phone they play muted by themselves
+  const clipAttrs = TOUCH ? 'muted loop playsinline preload="metadata"' : 'controls playsinline preload="none"';
   const fig = (m, i) => m.swap
     ? `<figure class="swap" style="--r:${(m.w / m.h).toFixed(4)};--d:${i * 0.1}s">${
       m.swap.map((s, k) => `<img src="${s.src}" alt="${esc(p.title)}"${k ? '' : ' class="is-on"'} loading="lazy" decoding="async">`).join('')}</figure>`
     : m.type === 'video'
-    ? `<figure style="--r:${(m.w / m.h).toFixed(4)};--d:${i * 0.1}s"><video src="${m.src}" poster="${m.poster}" controls playsinline preload="none"></video></figure>`
+    ? `<figure style="--r:${(m.w / m.h).toFixed(4)};--d:${i * 0.1}s"><video src="${m.src}" poster="${m.poster}" ${clipAttrs}></video></figure>`
     : `<figure style="--r:${(m.w / m.h).toFixed(4)};--d:${i * 0.1}s"><img src="${m.src}" width="${m.w}" height="${m.h}" alt="${esc(p.title)}" loading="lazy" decoding="async"></figure>`;
   // two by two; `pairs` (fixed partners) always share a row, so an image before one may stand alone
   const paired = new Map((p.pairs || []).flatMap(([a, b]) => [[a, b], [b, a]]));
@@ -959,7 +987,7 @@ function renderProject(root) {
     const m = rest[i];
     if (bigSet.has(m.idx)) {
       rows += `<figure class="p-seq p-big" style="--r:${(m.w / m.h).toFixed(4)}">${m.type === 'video'
-        ? `<video src="${m.src}" poster="${m.poster}" class="is-on" controls playsinline preload="none"></video>`
+        ? `<video src="${m.src}" poster="${m.poster}" class="is-on" ${clipAttrs}></video>`
         : `<img src="${m.src}" alt="${esc(p.title)}" class="is-on" loading="lazy" decoding="async">`}</figure>`;
       i += 1;
       continue;
@@ -995,6 +1023,7 @@ function renderProject(root) {
     root.querySelector('.p-cover .media').append(v);
     v.play().catch(() => {});
   }
+  if (TOUCH) root.querySelectorAll('video').forEach(autoplayInView);
   requestAnimationFrame(() => root.querySelector('.p-cover').classList.add('is-in'));
   reveal('.p-row figure, .p-seq');
   setupFollow('.p-next');
