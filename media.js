@@ -99,7 +99,7 @@ const MEDIA = {
     { src: 'assets/work/planting-pen/12.jpg', w: 1264, h: 848 },
   ],
   'sonar': [
-    { src: 'assets/work/sonar/01.jpg', w: 1280, h: 720 },
+    { src: 'assets/work/sonar/01.jpg', w: 2400, h: 1350 },
     { src: 'assets/work/sonar/02.jpg', w: 1376, h: 768 },
     { src: 'assets/work/sonar/03.jpg', w: 1280, h: 720 },
     { type: 'video', src: 'assets/work/sonar/04.mp4', poster: 'assets/work/sonar/04-poster.jpg', w: 1280, h: 720 },
