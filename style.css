@@ -372,6 +372,17 @@ body.intro-on .dots, body.intro-on .go, body.intro-on .slide-cap { opacity: 0; p
 .p-cover .media { position: absolute; inset: 0; scale: 1.08; transition: scale 2s var(--settle); }
 .p-cover.is-in .media { scale: 1; }
 .p-cover.contain .media img { object-fit: contain; }
+/* About: the cover is a map of every work, dimmed, each one a landmark (cards' 8px / 9px) */
+.a-map {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-auto-rows: 1fr;
+  gap: max(8px, calc(9 * var(--u)));
+  padding: max(8px, calc(9 * var(--u)));
+}
+.p-cover .a-map img { position: static; border-radius: 8px; filter: brightness(.42); }
+.a-mail { background: linear-gradient(currentColor, currentColor) 0 100% / 0 1px no-repeat; transition: background-size .5s var(--settle); }
+.a-mail:hover { background-size: 100% 1px; }
 .p-cover::after {
   content: '';
   position: absolute;
@@ -497,6 +508,7 @@ body.intro-on .dots, body.intro-on .go, body.intro-on .slide-cap { opacity: 0; p
   .card-title, .card .tags { opacity: 1; translate: none; }
   .slide-cap { bottom: calc(var(--top) + 64px); }
   .p-intro { grid-template-columns: 1fr; gap: 10px; }
+  .a-map { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .p-row { flex-direction: column; }
   .p-row figure { flex: none; }
   .p-next { cursor: pointer; }

@@ -92,8 +92,13 @@
 - **视频自动播放、静音、不用点**：WORK 卡片的视频、作品页的封面视频和图集里的视频，出现在屏幕上就自动播放（静音、循环、不显示控制条），滑出屏幕就暂停；卡片视频等卡片第一次出现在屏幕上才加载。电脑上不变。
 - 首页的粒子效果：手指离开屏幕后画面恢复，下一次触碰不会被当成一次很大的甩动。
 
+## 5E. ABOUT ME 页（about.html）
+- 文字来自 `about me\putin\About Me.txt`，**D2 用 Version 2「Let Me Guide You」**，原文照搬。
+- 按作品页的视觉系统排：全屏封面（所有作品缩略图排成一张变暗的"地图"，每个作品像一个地标）+ 左下角大写标题 LET ME GUIDE YOU、副标题 Zihe Wang、毛玻璃标签 VISUAL COMMUNICATION / INFORMATION DESIGN；下面是 "ABOUT ME" 文字区（第一段大字，其余灰色小字）和 "GET IN TOUCH" 邮箱；最后一句 "Let me guide you." 做成底部大图链接，鼠标碰到出现绿色 "VIEW MY WORK" 胶囊，点进 WORK。
+- 所有页面导航里的 ABOUT ME 都改成链接到 about.html。
+
 ## 6. 待办 / 待确认
-- [ ] PLAY AREA、ABOUT ME 页面还没有（Figma 里也没有）。
+- [ ] PLAY AREA 页面还没有（Figma 里也没有）。ABOUT ME 已完成。
 - [ ] 首页左下角的作品名胶囊、作品页的设计是 Figma 之外补充的，需要你确认。
 - [ ] Figma 的 MCP 免费额度用完了（Starter 方案有调用次数上限），之后如果在 Figma 里改了 D2，需要等额度恢复，或者把截图发给我。
 
@@ -127,3 +132,4 @@
 | `c60c31f` | 新增 2025 作品 Modular Typefaces（分类系统海报） |
 | `219b836` | 新增 2023 作品 Chayang Old Street Renewal |
 | `ff31818` | 手机端：视频在屏幕上自动静音播放、不用点；首页粒子效果手指离开后恢复 |
+| （本次） | 新增 ABOUT ME 页（Version 2：Let Me Guide You） |

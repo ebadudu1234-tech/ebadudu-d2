@@ -1046,8 +1046,21 @@ function playSequence(el, hold = 1500) {
   }, { threshold: 0.15 }).observe(el);
 }
 
+/* ============ About Me ============ */
+function setupAbout(root) {
+  const list = [...PROJECTS].sort((a, b) => b.year - a.year);
+  // the cover: every work as a small landmark on one dimmed map
+  root.querySelector('#a-map').innerHTML = list.map((p) => `<img src="${thumbSrc(p)}" alt="" decoding="async">`).join('');
+  // the closing line leads on to the newest work
+  root.querySelector('#a-next').src = coverSrc(list[0]);
+  requestAnimationFrame(() => root.querySelector('.p-cover').classList.add('is-in'));
+  setupFollow('.p-next');
+}
+
 /* ============ Boot ============ */
 if (document.getElementById('stage')) setupHome();
+const aboutRoot = document.getElementById('about');
+if (aboutRoot) setupAbout(aboutRoot);
 const cardsRoot = document.getElementById('cards');
 if (cardsRoot) renderCards(cardsRoot);
 const projectRoot = document.getElementById('project');
