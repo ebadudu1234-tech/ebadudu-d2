@@ -202,13 +202,16 @@ body.intro-on .dots, body.intro-on .go, body.intro-on .slide-cap { opacity: 0; p
 }
 .intro.is-leaving { opacity: 0; pointer-events: none; }
 .intro.is-gone { display: none; }
-/* goo layer: grey shapes only, run through the SVG goo filter so they stick and merge */
-.goo { position: absolute; inset: 0; filter: url(#goo-filter); }
+/* goo box: only the area around the block runs the SVG goo filter (cheap) */
+.goo { position: absolute; overflow: hidden; filter: url(#goo-filter); will-change: opacity; }
 .goo-block {
   position: absolute;
-  inset: 0;
+  left: 50%;
+  top: 50%;
+  border-radius: 8px;
   background: var(--block);
-  clip-path: inset(50% 50% 50% 50%);
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(.25);
 }
 .goo-ghost, .intro-photo {
   position: absolute;
@@ -222,15 +225,9 @@ body.intro-on .dots, body.intro-on .go, body.intro-on .slide-cap { opacity: 0; p
 .intro-photos { position: absolute; inset: 0; pointer-events: none; }
 .intro-photo { overflow: hidden; box-shadow: 0 16px 44px rgba(0, 0, 0, .45); }
 .intro-photo img { width: 100%; height: 100%; max-width: none; object-fit: cover; }
-/* the first work, opened through the growing block */
-.intro-reveal {
-  position: absolute;
-  inset: 0;
-  background: center / cover no-repeat;
-  opacity: 0;
-  clip-path: inset(50% 50% 50% 50%);
-}
-.goo-svg { position: absolute; width: 0; height: 0; }.intro-text {
+/* the full-screen growth: an unfiltered grey layer, the first work fades in inside it */
+.intro-reveal { position: absolute; inset: 0; background: var(--block); opacity: 0; will-change: clip-path; }
+.intro-reveal img { width: 100%; height: 100%; max-width: none; object-fit: cover; opacity: 0; will-change: opacity; }.goo-svg { position: absolute; width: 0; height: 0; }.intro-text {
   position: absolute;
   left: 50%;
   margin: 0;

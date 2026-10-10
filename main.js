@@ -134,6 +134,15 @@ function setupHome() {
   });
   // the whole picture is the "VIEW ALL MY WORK" button
   stage.addEventListener('click', () => { location.href = 'work.html'; });
+  // the first work gets its full time once the begin animation is over
+  addEventListener('intro:done', () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => show(current + 1), SLIDE_MS);
+    const dot = buttons[current];
+    dot.setAttribute('aria-current', 'false');
+    void dot.offsetWidth;  // restart its fill animation
+    dot.setAttribute('aria-current', 'true');
+  });
   show(0);
   setupGoFollow();
 }
@@ -401,6 +410,8 @@ function createFxFlow(canvas) {
 
   let sx = 0, sy = 0, prev = 0, cur = 0;
   const frame = (now) => {
+    // stay idle while the begin animation plays, so it has the GPU to itself
+    if (window.__introBusy) { prev = now; requestAnimationFrame(frame); return; }
     const dt = Math.min(0.033, prev ? (now - prev) / 1000 : 0.016);
     prev = now;
     if (now - lastMove > 60) { rawVx = 0; rawVy = 0; }      // the mouse has stopped
@@ -754,28 +765,41 @@ function createFxLite(canvas) {
    Two works fly in from left and right and meet in the middle; their grey ghosts run
    through a gooey SVG filter, so they stick and merge. Only then does the grey block
    appear, growing and fading up out of them. More works keep flying in and melt into
-   it as it swells, then it grows to full screen while the first work fades in. */
+   it as it swells, then it grows to full screen while the first work fades in.
+   Smoothness: the goo filter only covers a small box around the block; the full-screen
+   growth is a separate, unfiltered layer; covers are small thumbnails decoded before
+   anything moves; the home page's WebGL waits until the intro is done. */
+const thumbSrc = (p) => `assets/thumbs/${p.slug}.jpg`;
+
 async function playIntro(intro) {
   const W = innerWidth, H = innerHeight;
-  const DUR = 1800;                                   // + 0.2s fade = 2s in all
-  const w0 = Math.min(W * 0.36, 480), h0 = w0 * 0.7;  // the block at its "swallowing" size
+  const w0 = Math.min(W * 0.36, 480), h0 = w0 * 0.7;  // the block at full "swallowing" size
   const rect = (w, h, r = 8) => `inset(${(H - h) / 2}px ${(W - w) / 2}px ${(H - h) / 2}px ${(W - w) / 2}px round ${r}px)`;
   const first = bySlug(SLIDES[0]);
   const pool = (INTRO_DECK && INTRO_DECK.length ? INTRO_DECK : PROJECTS.map((p) => p.slug))
-    .filter((s) => s !== SLIDES[0]).map(bySlug).filter(Boolean).slice(0, 12);
+    .filter((s) => s !== SLIDES[0]).map(bySlug).filter(Boolean).slice(0, 10);
 
+  // the goo box: only this area is filtered
+  const gw = w0 * 2.2, gh = h0 * 2.4, gx = (W - gw) / 2, gy = (H - gh) / 2;
   const goo = document.getElementById('goo');
-  const photos = document.getElementById('intro-photos');
+  Object.assign(goo.style, { left: `${gx}px`, top: `${gy}px`, width: `${gw}px`, height: `${gh}px` });
   const block = document.getElementById('goo-block');
+  Object.assign(block.style, { width: `${w0}px`, height: `${h0}px` });
+  const photos = document.getElementById('intro-photos');
   const reveal = document.getElementById('intro-reveal');
+  reveal.style.clipPath = rect(w0, h0);
+  const revealImg = new Image();
+  if (first) revealImg.src = coverSrc(first);
+  reveal.append(revealImg);
   const text = document.getElementById('intro-text');
-  if (first) reveal.style.backgroundImage = `url("${coverSrc(first)}")`;
   text.style.top = `${(H + h0) / 2 + 22}px`;
 
   let done = false;
   const finish = () => {
     if (done) return;
     done = true;
+    window.__introBusy = false;
+    dispatchEvent(new Event('intro:done'));
     intro.classList.add('is-leaving');
     document.body.classList.remove('intro-on');
     setTimeout(() => intro.classList.add('is-gone'), 220);
@@ -783,54 +807,72 @@ async function playIntro(intro) {
   intro.addEventListener('click', finish);
   addEventListener('keydown', finish, { once: true });
 
-  // the block: nothing until the first two works meet (~0.45s), then it grows and fades up
-  // out of them, swells while swallowing the rest (to 1.3s), then grows to full screen
-  const grow = [
-    { offset: 0, clipPath: rect(w0 * 0.25, h0 * 0.25), opacity: 0 },
-    { offset: 0.24, clipPath: rect(w0 * 0.25, h0 * 0.25), opacity: 0, easing: 'cubic-bezier(.34, 1.4, .64, 1)' },
-    { offset: 0.38, clipPath: rect(w0 * 0.62, h0 * 0.62), opacity: 1, easing: 'cubic-bezier(.3, 0, .2, 1)' },
-    { offset: 0.72, clipPath: rect(w0, h0), opacity: 1, easing: 'cubic-bezier(.76, 0, .24, 1)' },
-    { offset: 1, clipPath: rect(W, H, 0), opacity: 1 },
-  ];
-  block.animate(grow, { duration: DUR, fill: 'forwards' });
-  // the first work opens through the same shape, fading in while it grows
-  reveal.animate(grow.map((k) => ({ ...k, opacity: k.offset < 0.72 ? 0 : k.offset === 1 ? 1 : 0 })), { duration: DUR, fill: 'forwards' });
-  setTimeout(() => !done && text.classList.add('is-on'), 650);
-  setTimeout(() => text.classList.remove('is-on'), 1250);
-
-  // works fly in one after another and melt into the block
+  // build the flying works and decode everything before the first frame moves
   const cw = w0 * 0.5, ch = cw * 0.7;
   const far = Math.hypot(W, H) * 0.6 + cw;
-  pool.forEach((p, i) => {
+  const cards = pool.map((p, i) => {
     const ghost = document.createElement('div');
     ghost.className = 'goo-ghost';
     const photo = document.createElement('div');
     photo.className = 'intro-photo';
-    photo.innerHTML = `<img src="${coverSrc(p)}" alt="" decoding="async">`;
+    const img = new Image();
+    img.src = thumbSrc(p);
+    img.alt = '';
+    photo.append(img);
     [ghost, photo].forEach((el) => Object.assign(el.style, { width: `${cw}px`, height: `${ch}px` }));
     goo.append(ghost);
     photos.append(photo);
+    return { ghost, photo, img, i };
+  });
+  await Promise.race([
+    Promise.all([...cards.map((c) => c.img.decode().catch(() => {})), revealImg.decode().catch(() => {})]),
+    wait(350),
+  ]);
+  if (done) return;
+  // from here on the WebGL stays idle (it had the moment above to upload the first work)
+  window.__introBusy = true;
 
+  const EASE = 'cubic-bezier(.3, .1, .3, 1)';
+  cards.forEach(({ ghost, photo, i }) => {
     // the first two come from left and right at the same time and meet side by side
     const pair = i < 2;
-    const ang = pair ? (i ? 0 : Math.PI) + (Math.random() - 0.5) * 0.3 : (i / pool.length) * Math.PI * 2 + Math.random() * 0.5;
+    const ang = pair ? (i ? 0 : Math.PI) + (Math.random() - 0.5) * 0.3 : (i / cards.length) * Math.PI * 2 + Math.random() * 0.5;
     const sx = W / 2 + Math.cos(ang) * far - cw / 2, sy = H / 2 + Math.sin(ang) * far - ch / 2;
     const ex = W / 2 - cw / 2 + (pair ? (i ? 1 : -1) * cw * 0.32 : 0), ey = H / 2 - ch / 2;
     const r0 = (Math.random() - 0.5) * 60;
-    const path = [
-      { transform: `translate(${sx}px, ${sy}px) rotate(${r0}deg) scale(1)` },
-      { transform: `translate(${ex + (sx - ex) * 0.18}px, ${ey + (sy - ey) * 0.18}px) rotate(${r0 * 0.2}deg) scale(.8)`, offset: 0.7 },
-      { transform: `translate(${ex}px, ${ey}px) rotate(0deg) scale(${pair ? 0.75 : 0.3})` },   // the pair stays big enough to touch
+    const path = (ox, oy) => [
+      { transform: `translate(${sx - ox}px, ${sy - oy}px) rotate(${r0}deg) scale(1)` },
+      { transform: `translate(${ex + (sx - ex) * 0.18 - ox}px, ${ey + (sy - ey) * 0.18 - oy}px) rotate(${r0 * 0.2}deg) scale(.8)`, offset: 0.7 },
+      { transform: `translate(${ex - ox}px, ${ey - oy}px) rotate(0deg) scale(${pair ? 0.75 : 0.3})` },
     ];
     const timing = pair
-      ? { duration: 450, delay: 0, easing: 'cubic-bezier(.3, .1, .3, 1)', fill: 'forwards' }
-      : { duration: 500, delay: 380 + (i - 2) * 70, easing: 'cubic-bezier(.3, .1, .3, 1)', fill: 'forwards' };
-    ghost.animate(path, timing);
-    photo.animate(path, timing);
-    photo.animate([{ opacity: 1 }, { opacity: 1, offset: 0.45 }, { opacity: 0, offset: 0.82 }, { opacity: 0 }], timing);
+      ? { duration: 450, delay: 0, easing: EASE, fill: 'forwards' }
+      : { duration: 450, delay: 380 + (i - 2) * 60, easing: EASE, fill: 'forwards' };
+    ghost.animate(path(gx, gy), timing);           // ghosts live inside the goo box
+    photo.animate(path(0, 0), timing);
+    // the photo only turns to grey once it reaches the block
+    photo.animate([{ opacity: 1 }, { opacity: 1, offset: 0.72 }, { opacity: 0, offset: 0.95 }, { opacity: 0 }], timing);
   });
 
-  await wait(DUR);
+  // the grey block: born when the pair meets (~0.45s), swells while swallowing (to 1.3s)
+  block.animate([
+    { transform: 'translate(-50%, -50%) scale(.25)', opacity: 0 },
+    { transform: 'translate(-50%, -50%) scale(.25)', opacity: 0, offset: 0.33, easing: 'cubic-bezier(.34, 1.4, .64, 1)' },
+    { transform: 'translate(-50%, -50%) scale(.62)', opacity: 1, offset: 0.52, easing: 'cubic-bezier(.3, 0, .2, 1)' },
+    { transform: 'translate(-50%, -50%) scale(1)', opacity: 1 },
+  ], { duration: 1300, fill: 'forwards' });
+  setTimeout(() => !done && text.classList.add('is-on'), 650);
+
+  await wait(1300);
+  if (done) return;
+  // hand over to the unfiltered layer at the same size, and grow it to full screen
+  text.classList.remove('is-on');
+  reveal.style.opacity = 1;
+  goo.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 120, fill: 'forwards' });
+  const GROW = 500, ease = 'cubic-bezier(.76, 0, .24, 1)';
+  reveal.animate([{ clipPath: rect(w0, h0) }, { clipPath: rect(W, H, 0) }], { duration: GROW, easing: ease, fill: 'forwards' });
+  revealImg.animate([{ opacity: 0 }, { opacity: 1 }], { duration: GROW, easing: 'ease-in', fill: 'forwards' });
+  await wait(GROW);
   finish();
 }
 
@@ -839,7 +881,7 @@ function renderCards(root) {
   const list = [...PROJECTS].sort((a, b) => b.year - a.year);
   root.innerHTML = list.map((p, i) => `
     <a class="card" href="${projectUrl(p)}" data-slug="${p.slug}" style="--d:${(i % 3) * 0.07}s">
-      <img src="${coverSrc(p)}" alt="${esc(p.title)}" loading="lazy" decoding="async">
+      <img src="${thumbSrc(p)}" alt="${esc(p.title)}" loading="lazy" decoding="async">
       <h2 class="card-title">${esc(p.title)}</h2>
       ${tagsHtml(p.tags)}
     </a>`).join('');
