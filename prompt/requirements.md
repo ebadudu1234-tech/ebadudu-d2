@@ -77,7 +77,9 @@
 - 图片两两一行，同一行高度一致，按原比例显示，不裁切；间距 9px、圆角 8px，和 WORK 页一致。
 - **Switchback**：在 "ABOUT THIS WORK" 介绍下面放一张大图，手绘草图 → 线稿 → 带标注的渲染图**轮流替换**，从草图开始（详见总笔记 3.6.1，`data.js` 里的 `sequence`）。
 - **Planting Pen**：三对草图 ↔ 渲染图在图集里按正常大小、每 1.5 秒互换（草图先）；方盒草图和 CLOSED FORM 不出现（详见总笔记 3.6.2）。
-- 最下面是"下一个作品"的大图链接，鼠标移上去出现绿色 "NEXT WORK" 胶囊。
+- 作品名、副标题、说明文字都用我写的文本描述（原文）；作品名下面一行是副标题，"ABOUT THIS WORK" 里放所有段落（详见总笔记 3.6）。content reference 不用。
+- 图集顺序：草图 → 场景图 → 小物件 → 周边（和 D1 一样，来自 `D1/tools/build-assets.ps1`，素材复制到 D2）。
+- 最下面是"下一个作品"的大图链接，鼠标移上去出现绿色 "NEXT WORK" 胶囊；**不触碰时整块不透明度为 80%（再降 20%），触碰时恢复 100%**。
 - 视频作品的封面直接播放视频，并跳过 ArtCenter 片头。
 
 ## 6. 待办 / 待确认
@@ -103,3 +105,4 @@
 | `0721d79` | Ungreen Shop、Yiwugo、Nuclear Tide 改为 2024 年 |
 | `f07e707` | Allodox 改为 2024；After Dada、2000s Game Zine、DADA Newspaper 改为 2025；轮播是否换掉 After Dada 待定 |
 | `16be6b9` | Planting Pen 草图 ↔ 渲染图互换，删掉方盒草图和 CLOSED FORM |
+| （本次） | 用我的文本描述更新作品名、副标题和说明；图集按草图 → 场景 → 小物件 → 周边排序；新增 2023 年的 Restaurant；NEXT WORK 不触碰时不透明度 80%；WORK 卡片小图由 `D1/tools/thumbs.ps1` 生成 |

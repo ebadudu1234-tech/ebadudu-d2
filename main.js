@@ -956,12 +956,12 @@ function renderProject(root) {
   root.innerHTML = `
     <section class="p-cover${p.fit === 'contain' ? ' contain' : ''}">
       <div class="media">${hero ? (hero.type === 'video' ? '' : `<img src="${hero.src}" alt="${esc(p.title)}">`) : ''}</div>
-      <div class="p-head"><h1>${esc(p.title)}</h1>${tagsHtml([String(p.year), ...p.tags])}</div>
+      <div class="p-head"><h1>${esc(p.title)}</h1>${p.subtitle ? `<p class="p-sub">${esc(p.subtitle)}</p>` : ''}${tagsHtml([String(p.year), ...p.tags])}</div>
     </section>
     <div class="p-body">
       <div class="p-intro">
         <p class="p-label">ABOUT THIS WORK</p>
-        <div>${p.intro ? `<p class="p-text">${esc(p.intro)}</p>` : ''}${p.detail ? `<p class="p-text">${esc(p.detail)}</p>` : ''}</div>
+        <div>${(p.text || [p.intro, p.detail].filter(Boolean)).map((t) => `<p class="p-text">${esc(t)}</p>`).join('')}</div>
       </div>
       ${seqHtml}
       <div class="p-gallery">${rows}</div>

@@ -394,6 +394,7 @@ body.intro-on .dots, body.intro-on .go, body.intro-on .slide-cap { opacity: 0; p
 }
 .p-cover.is-in h1 { opacity: 1; translate: none; }
 .p-head .tags { position: static; }
+.p-sub { margin: 0 0 14px; font-size: clamp(15px, calc(18 * var(--u)), 18px); color: rgba(255, 255, 255, .78); }
 .p-head .tags li { background: var(--glass); border-color: rgba(255, 255, 255, .7); color: #fff; }
 
 .p-body { padding: clamp(56px, calc(110 * var(--u)), 110px) var(--right) 0 var(--left); }
@@ -410,7 +411,7 @@ body.intro-on .dots, body.intro-on .go, body.intro-on .slide-cap { opacity: 0; p
   font-size: clamp(20px, calc(28 * var(--u)), 28px);
   line-height: 1.3;
 }
-.p-text + .p-text { margin-top: 1em; color: var(--dim); }
+.p-text + .p-text { margin-top: 1.1em; color: var(--dim); font-size: clamp(17px, calc(20 * var(--u)), 20px); line-height: 1.5; }
 
 /* images in tight rows: same height per row, widths follow each image's shape */
 .p-gallery { display: grid; gap: max(8px, calc(9 * var(--u))); }
@@ -461,6 +462,9 @@ body.intro-on .dots, body.intro-on .go, body.intro-on .slide-cap { opacity: 0; p
 }
 .p-next img { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; object-fit: cover; filter: brightness(.6); transition: transform 1.2s var(--settle), filter .6s; }
 .p-next:hover img { transform: scale(1.05); filter: brightness(.75); }
+/* at rest the next-work block sits back (opacity −20%); hovering brings it forward */
+.p-next { opacity: .8; transition: opacity .4s ease; }
+.p-next:hover { opacity: 1; }
 .p-next span {
   position: absolute;
   left: var(--left);
