@@ -91,17 +91,17 @@ const PROJECTS = [
     detail: 'Based on everyday dilemmas and my internship in game design, I designed the levels, scenes and missions. The goal: help people see that making choices is not so hard.',
   },
   {
-    slug: 'ungreen-shop', title: 'Ungreen Shop', year: 2025, tags: ['BRAND', 'PACKAGING', 'MOTION'], cover: 0,
+    slug: 'ungreen-shop', title: 'Ungreen Shop', year: 2024, tags: ['BRAND', 'PACKAGING', 'MOTION'], cover: 0,
     intro: 'Branding, motion graphics and packaging that rethink food additives. Most people fear “additives” because packaging is full of boring words and numbers.',
     detail: 'Ungreen Shop uses bubbly type, bright colours and simple graphics to explain additives in a fun, easy-to-understand way.',
   },
   {
-    slug: 'yiwugo', title: 'Yiwugo', year: 2025, tags: ['BRAND', 'WAYFINDING', 'UI'], cover: 0,
+    slug: 'yiwugo', title: 'Yiwugo', year: 2024, tags: ['BRAND', 'WAYFINDING', 'UI'], cover: 0,
     intro: 'A visual upgrade for the Yiwu Small Commodities Market — branding, a wayfinding system and front-end design.',
     detail: 'The bee, a social and hard-working creature, became the IP character that guides visitors through the market and its brochures.',
   },
   {
-    slug: 'nuclear-tide', title: 'Nuclear Tide Evolutionaries', year: 2025, tags: ['INSTALLATION'], cover: 0,
+    slug: 'nuclear-tide', title: 'Nuclear Tide Evolutionaries', year: 2024, tags: ['INSTALLATION'], cover: 0,
     intro: 'An interactive device imagining how sea creatures might evolve in an ocean contaminated by nuclear wastewater.',
     detail: 'Not to make that future feel normal, but as a warning — a preventive exposure through visualisation.',
   },
