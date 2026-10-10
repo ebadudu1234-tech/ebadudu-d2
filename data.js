@@ -9,7 +9,8 @@
    title     : first line of the description
    subtitle  : second line (discipline | course)
    year      : groups / orders the WORK page (newest first)
-   tags      : pills on cards and project page, and the WORK filter
+   tags      : pills on cards and project page, and the WORK filter. They follow the category
+               line of each description (2nd line, before '|'); VIDEO is added by main.js to every work with a film
    text      : the description paragraphs, in order
    cover     : which media item (0-based) to use on cards / previews
    hero      : which media item opens the project page (default 0)
@@ -22,7 +23,7 @@
    ========================================================= */
 const PROJECTS = [
   {
-    slug: '550-cafe', title: '5:50 Cafe', year: 2026, tags: ['BRAND', 'SPACE', 'PACKAGING', 'UI'], cover: 0,
+    slug: '550-cafe', title: '5:50 Cafe', year: 2026, tags: ['BRAND', 'SPACE', 'PACKAGING', 'WEB'], cover: 0,
     subtitle: 'Brand identity, space, packaging, web | Spring 2026 Graduate Studio',
     text: [
       `Most boba and desserts are too sweet. Online, many people call traditional boba "cloyingly sweet" or even "gross." At the same time, brown sugar is usually seen as an ingredient, not a snack. I wanted to change that. 5:50 is a brown sugar cafe for students, creatives and office commuters (18 to 35) who want a calm reset in a busy day. It offers warm, balanced milk tea and small bites, not loud, over-sweet boba. The visit is simple: walk in, choose your brown sugar, pair it with a bite and take a seat.`,
@@ -32,7 +33,7 @@ const PROJECTS = [
   },
   {
     // sequence: hand sketch → line drawing → labelled render, taking turns under the intro
-    slug: 'switchback', title: 'Switchback', year: 2026, tags: ['PRODUCT', 'BRAND', 'VIDEO'], cover: 5, sequence: [1, 2, 3],
+    slug: 'switchback', title: 'Switchback', year: 2026, tags: ['PRODUCT', 'BRAND'], cover: 5, sequence: [1, 2, 3],
     subtitle: 'Product design, brand | Spring 2026 Graduate Studio',
     text: [
       `Most mistakes with a dog happen in small moments: leaving a building, crossing the street, getting into a car. I started from these moments and asked: how might we design pet gear that feels comfortable, is easy to use and works as one system, so owners don't have to "manage the chaos"?`,
@@ -42,7 +43,7 @@ const PROJECTS = [
     ],
   },
   {
-    slug: 'under-the-cyber-skin', title: 'Modern Myths: Under the Cyber Skin', year: 2026, tags: ['EDITORIAL', 'SPACE'], cover: 0,
+    slug: 'under-the-cyber-skin', title: 'Modern Myths: Under the Cyber Skin', year: 2026, tags: ['EDITORIAL', 'EXHIBITION'], cover: 0,
     subtitle: 'Editorial design, exhibition',
     text: [
       `A magazine about how artists today build new myths from bodies, technology and history. It has parts like "Art and Myth" and "Myth and Art," with essays, interviews and artist sections, including Qiu Anxiong and Matthew Barney.`,
@@ -52,7 +53,7 @@ const PROJECTS = [
   },
   {
     // each sketch takes turns with its render (cup box, book box, two-layer box) inside a normal gallery image
-    slug: 'planting-pen', title: 'Daily Sprout: Planting Pen', year: 2026, tags: ['PACKAGING', 'VIDEO'], cover: 0,
+    slug: 'planting-pen', title: 'Daily Sprout: Planting Pen', year: 2026, tags: ['PACKAGING'], cover: 0,
     swaps: [[1, 9], [2, 10], [3, 11]],
     subtitle: 'Package design',
     text: [
@@ -62,7 +63,7 @@ const PROJECTS = [
     ],
   },
   {
-    slug: 'sonar', title: 'Sónar', year: 2026, tags: ['EVENT', 'MOTION', 'MERCH', 'VIDEO'], cover: 0, hoverVideo: 4,
+    slug: 'sonar', title: 'Sónar', year: 2026, tags: ['EVENT', 'MOTION', 'MERCH'], cover: 0, hoverVideo: 4,
     subtitle: 'Event identity, motion, merch',
     text: [
       `A visual identity for Sónar, the electronic music festival. The center of it is a glowing radial symbol with soft, wavy petals. It works in different colors: blue and white, purple, and gold, so it can change with the stage and the night.`,
@@ -79,7 +80,7 @@ const PROJECTS = [
     ],
   },
   {
-    slug: 'lotus', title: 'Lotus Cigarette', year: 2026, tags: ['3D', 'MOTION', 'VIDEO'], cover: 0, start: 6.5,
+    slug: 'lotus', title: 'Lotus Cigarette', year: 2026, tags: ['3D', 'MOTION'], cover: 0, start: 6.5,
     subtitle: '3D motion graphics | 3D Motion class',
     text: [
       `My project is a creative commercial for Lotus cigarettes, a popular Chinese brand that shares its name with the lotus flower. The animation starts by showing the cigarette being built from tobacco, paper and a filter in a technological way. After it is lit, a lotus grows from the cigarette and turns the scene into a lotus pond, where the pack is finally revealed. By putting an industrial object together with a natural and meaningful symbol, I want to give the brand a more elegant and unexpected image.`,
@@ -87,14 +88,14 @@ const PROJECTS = [
     ],
   },
   {
-    slug: 'ocupus', title: 'Artificial Octopus', year: 2026, tags: ['3D', 'MOTION', 'VIDEO'], cover: 0, start: 5.6,
+    slug: 'ocupus', title: 'Artificial Octopus', year: 2026, tags: ['3D', 'MOTION'], cover: 0, start: 5.6,
     subtitle: '3D motion title sequence | 3D Motion Graphics, Summer 2026, Faculty: Maruyama',
     text: [
       `A short 3D title sequence about an octopus that is made, not born. The tentacle is built like a machine: white mechanical segments, with clear blue-violet rings stacked along it like suckers and soft pink parts inside. The camera starts very close and slides along the rings, then pulls back so you see the whole tentacle curl into a spiral above a white mechanical base. The colors are violet, blue and pink on a dark background, and the rings look like glass with light passing through them.`,
     ],
   },
   {
-    slug: 'leviairab', title: 'Leviathan Absinthe, by Dream Recovery Department', year: 2026, tags: ['PACKAGING', 'BRAND', 'VIDEO'], cover: 0, hoverVideo: 1,
+    slug: 'leviairab', title: 'Leviathan Absinthe, by Dream Recovery Department', year: 2026, tags: ['PACKAGING', 'BRAND'], cover: 0, hoverVideo: 1,
     subtitle: 'Packaging, brand | Spring 2026 Graduate Studio',
     text: [
       `Dream Recovery Department is a fictional organization. It collects and keeps the dreams people forget after they wake up. Each bottle is a recovered dream sample: when you open it, you open a sealed memory and step for a moment into a strange world between reality and the subconscious.`,
@@ -103,7 +104,7 @@ const PROJECTS = [
     ],
   },
   {
-    slug: 'code-for-fun', title: 'Code For Fun: Where Play Meets Purpose', year: 2025, tags: ['BRAND', 'SPACE', 'UI', 'VIDEO'], cover: 0,
+    slug: 'code-for-fun', title: 'Code For Fun: Where Play Meets Purpose', year: 2025, tags: ['BRAND', 'SPACE', 'UI'], cover: 0,
     subtitle: 'Brand identity, space, UI',
     text: [
       `Code For Fun is a coding education brand for kids aged 9 and up. Kids want fun, parents want real outcomes, and schools need something that can scale. Most platforms are only playful or too academic. I wanted one brand that is playful but serious.`,
@@ -112,7 +113,7 @@ const PROJECTS = [
     ],
   },
   {
-    slug: 'after-dada', title: 'The Eye That Dreams', year: 2025, tags: ['EDITORIAL'], cover: 0,
+    slug: 'after-dada', title: 'The Eye That Dreams', year: 2025, tags: ['EDITORIAL', 'ZINE'], cover: 0,
     subtitle: 'Editorial design, zine',
     text: [
       `A zine about what came after Dada: Surrealism. It goes through an overview, the Manifestoes of Surrealism and Surrealism and the ballet, and it ends with the line "The imagination is on the verge of reclaiming its rights."`,
@@ -120,7 +121,7 @@ const PROJECTS = [
     ],
   },
   {
-    slug: 'dada-newspaper', title: 'DADA! DADA!', year: 2025, tags: ['EDITORIAL'], cover: 0,
+    slug: 'dada-newspaper', title: 'DADA! DADA!', year: 2025, tags: ['EDITORIAL', 'NEWSPAPER'], cover: 0,
     subtitle: 'Editorial design, newspaper',
     text: [
       `A newspaper about the Dada movement. The front page says it all: "DADA! DADA! No rules. No order. Only DADA."`,
@@ -128,7 +129,7 @@ const PROJECTS = [
     ],
   },
   {
-    slug: 'game-zine', title: 'Low Battery, No Childhood', year: 2025, tags: ['EDITORIAL'], cover: 0,
+    slug: 'game-zine', title: 'Low Battery, No Childhood', year: 2025, tags: ['EDITORIAL', 'ZINE'], cover: 0,
     subtitle: 'Editorial design, zine',
     text: [
       `A zine about the games of my childhood in the 2000s. The cover shows a kid in sunglasses sitting inside an old beige computer, with the title "Low Battery, No Childhood."`,
@@ -136,7 +137,7 @@ const PROJECTS = [
     ],
   },
   {
-    slug: 'allodox', title: 'Allodox', year: 2024, tags: ['GAME'], cover: 0,
+    slug: 'allodox', title: 'Allodox', year: 2024, tags: ['GAME', 'INTERACTIVE'], cover: 0,
     subtitle: 'Interactive game',
     text: [
       `My inspiration comes from daily life. Today we have so much information and so many options, and choosing can feel stressful and scary. But people who don't have decision-making paralysis find it hard to understand people who do. Many people even mistake it for depression and don't pay attention to it.`,
@@ -153,7 +154,7 @@ const PROJECTS = [
     ],
   },
   {
-    slug: 'yiwugo', title: 'Yiwugo', year: 2024, tags: ['BRAND', 'WAYFINDING', 'UI'], cover: 0,
+    slug: 'yiwugo', title: 'Yiwugo', year: 2024, tags: ['BRAND', 'WAYFINDING', 'WEB'], cover: 0,
     subtitle: 'Branding, wayfinding system, front-end design',
     text: [
       `Yiwu Small Commodities Market is famous all over the world, but it is hard to find your way there. The planning is chaotic and there is no clear brand. People here also do business in groups, together. So I chose the bee as the IP character, because bees are social and hard-working.`,
@@ -162,7 +163,7 @@ const PROJECTS = [
     ],
   },
   {
-    slug: 'nuclear-tide', title: 'Nuclear Tide Evolutionaries', year: 2024, tags: ['INSTALLATION'], cover: 0,
+    slug: 'nuclear-tide', title: 'Nuclear Tide Evolutionaries', year: 2024, tags: ['INTERACTIVE', 'DEVICE'], cover: 0,
     subtitle: 'Interactive device design',
     text: [
       `The inspiration comes from Japan's release of nuclear wastewater. As of November 4, 2024, the 10th discharge from the Fukushima plant had finished, with a total of 78,300 tons. I believe life is resilient and can evolve to fit its environment, but in bad conditions it may mutate in more and more abnormal ways. I don't want this to become normal. So I imagined it now, as a warning.`,

@@ -9,6 +9,11 @@ const coverSrc = (p) => { const m = coverItem(p); return m && (m.poster || m.src
 const videoOf = (p) => (p.hoverVideo != null ? mediaOf(p)[p.hoverVideo] : mediaOf(p).find((m) => m.type === 'video'));
 const projectUrl = (p) => `project.html?p=${encodeURIComponent(p.slug)}`;
 const tagsHtml = (tags) => `<ul class="tags">${tags.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>`;
+// tags come from each description's category line; VIDEO is never written by hand,
+// every work with a film gets it
+PROJECTS.forEach((p) => {
+  if (mediaOf(p).some((m) => m.type === 'video') && !p.tags.includes('VIDEO')) p.tags.push('VIDEO');
+});
 
 /* Loop a muted video from `start` seconds (skips the title card at the head of some films) */
 function loopVideo(v, start = 0) {
