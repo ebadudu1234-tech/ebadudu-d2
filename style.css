@@ -46,6 +46,8 @@ img, video { display: block; max-width: 100%; }
 /* white words on white glass stay readable over bright photos */
 .glass, .glass-green { text-shadow: 0 1px 10px rgba(0, 0, 0, .28); }
 .glass-green { background: var(--green); border-radius: 25px; font-weight: 700; }
+/* pressed: the green deepens to 80% right away */
+.glass-green.is-pressed { background: rgba(0, 183, 12, .8); transition-duration: .06s; }
 
 /* ============ Top bar: logo pill + link pill ============ */
 .bar {

@@ -59,6 +59,11 @@ function pillCursor(pill, isOn) {
     if (!queued) { queued = true; requestAnimationFrame(place); }
   }, { passive: true });
   document.addEventListener('pointerleave', () => pill.classList.remove('is-on'));
+  // pressing deepens the green to 80%, so the click clearly registers
+  addEventListener('pointerdown', () => { if (pill.classList.contains('is-on')) pill.classList.add('is-pressed'); });
+  const release = () => setTimeout(() => pill.classList.remove('is-pressed'), 180);
+  addEventListener('pointerup', release);
+  addEventListener('pointercancel', release);
 }
 
 /* ============ Home: one screen, works play one after another ============ */
@@ -133,7 +138,8 @@ function setupHome() {
     if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') show(current - 1);
   });
   // the whole picture is the "VIEW ALL MY WORK" button
-  stage.addEventListener('click', () => { location.href = 'work.html'; });
+  // a short beat so the pressed (80%) green is seen before the page changes
+  stage.addEventListener('click', () => { setTimeout(() => { location.href = 'work.html'; }, 120); });
   // the first work gets its full time once the begin animation is over
   addEventListener('intro:done', () => {
     clearTimeout(timer);
