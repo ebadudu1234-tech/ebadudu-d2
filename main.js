@@ -39,20 +39,24 @@ function reveal(selector, opts = { threshold: 0.12 }) {
 /* ---------- Green pill that trails the cursor over the given elements ---------- */
 function setupFollow(selector) {
   const pill = document.getElementById('follow');
-  if (!pill || !matchMedia('(hover: hover) and (pointer: fine)').matches) return;
-  let x = 0, y = 0, px = 0, py = 0, running = false;
-  const tick = () => {
-    px += (x - px) * 0.22;
-    py += (y - py) * 0.22;
-    pill.style.transform = `translate(${(px + 18).toFixed(1)}px, ${(py - 25).toFixed(1)}px)`;
-    if (pill.classList.contains('is-on') || Math.abs(x - px) > 0.5) requestAnimationFrame(tick); else running = false;
+  if (!pill) return;
+  pillCursor(pill, (target) => !!target.closest(selector));
+}
+
+/* The pill IS the mouse: centred on the pointer, no lag, the arrow is hidden (CSS
+   cursor: none) wherever the pill shows. `isOn(target)` says where it shows. */
+function pillCursor(pill, isOn) {
+  if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+  let x = 0, y = 0, queued = false;
+  const place = () => {
+    queued = false;
+    pill.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
   };
   addEventListener('pointermove', (e) => {
     x = e.clientX; y = e.clientY;
-    const over = !!e.target.closest(selector);
-    if (over && !pill.classList.contains('is-on')) { px = x; py = y; }
-    pill.classList.toggle('is-on', over);
-    if (!running) { running = true; requestAnimationFrame(tick); }
+    pill.classList.add('is-following');
+    pill.classList.toggle('is-on', isOn(e.target));
+    if (!queued) { queued = true; requestAnimationFrame(place); }
   }, { passive: true });
   document.addEventListener('pointerleave', () => pill.classList.remove('is-on'));
 }
@@ -133,23 +137,10 @@ function setupHome() {
   setupGoFollow();
 }
 
-/* "VIEW ALL MY WORK" trails the cursor with a little lag (drag) */
+/* "VIEW ALL MY WORK" is the mouse on the home page; over the nav, caption and dots
+   the normal arrow comes back so they stay clickable */
 function setupGoFollow() {
-  const go = document.getElementById('go');
-  if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return;
-  let x = 0, y = 0, px = 0, py = 0, started = false;
-  addEventListener('pointermove', (e) => {
-    x = e.clientX; y = e.clientY;
-    if (!started) { started = true; px = x; py = y; go.classList.add('is-following'); requestAnimationFrame(tick); }
-    // step aside over the nav, caption and dots so they stay clickable and readable
-    go.classList.toggle('is-away', !!e.target.closest('.bar, .slide-cap, .dots'));
-  }, { passive: true });
-  const tick = () => {
-    px += (x - px) * 0.16;
-    py += (y - py) * 0.16;
-    go.style.transform = `translate(${(px + 18).toFixed(1)}px, ${(py + 14).toFixed(1)}px)`;
-    requestAnimationFrame(tick);
-  };
+  pillCursor(document.getElementById('go'), (target) => !target.closest('.bar, .slide-cap, .dots'));
 }
 
 /* ============ Screen-wave particles (WebGL) ============
@@ -165,6 +156,7 @@ function createFx(canvas) {
   const field = `
     uniform vec4 uA[${N}];   // x, y, direction x, direction y (CSS px)
     uniform vec2 uB[${N}];   // strength, age (s)
+    const float K = 0.6667;  // size of the whole effect: 1 / 1.5 of the first version
     void wave(vec2 p, out vec2 drag, out vec2 push, out float f) {
       drag = vec2(0.0); push = vec2(0.0); f = 0.0;
       for (int i = 0; i < ${N}; i++) {
@@ -172,9 +164,9 @@ function createFx(canvas) {
         if (s < 0.002) continue;
         vec2 d = p - uA[i].xy;
         float dist = length(d);
-        float g = exp(-dist * dist / 12100.0);                       // soft blob around the sample
-        float ring = 50.0 + uB[i].y * 560.0;                          // ripple radius grows with age
-        float w = exp(-pow((dist - ring) / 38.0, 2.0));               // the ripple band
+        float g = exp(-dist * dist / (12100.0 * K * K));             // soft blob around the sample
+        float ring = (50.0 + uB[i].y * 560.0) * K;                    // ripple radius grows with age
+        float w = exp(-pow((dist - ring) / (38.0 * K), 2.0));         // the ripple band
         vec2 n = d / (dist + 1.0);
         drag += uA[i].zw * g * s;
         push += n * (w * s + g * s * 0.6);
@@ -208,10 +200,11 @@ function createFx(canvas) {
       vec2 p = vec2(vUv.x, 1.0 - vUv.y) * uRes;
       vec2 drag, push; float f;
       wave(p, drag, push, f);
-      vec2 q = p - push * 9.0 - drag * 10.0 - uShift;
+      vec2 q = p - (push * 9.0 + drag * 10.0) * K - uShift;
       vec3 c = picture(q, uRes, uT0, uT1, uAsp, uMix);
-      float hole = smoothstep(0.2, 0.95, f);
-      gl_FragColor = vec4(c * (1.0 - hole * 0.55), 1.0);
+      // where it breaks the work drops to ~10% visibility, so the particles carry the picture
+      float hole = smoothstep(0.1, 0.55, f);
+      gl_FragColor = vec4(c * (1.0 - hole * 0.9), 1.0);
     }`;
   // the particles: one per grid cell, coloured from where they started
   const ptsVS = `${head}${field}
@@ -223,8 +216,8 @@ function createFx(canvas) {
       vec2 drag, push; float f;
       wave(aPos, drag, push, f);
       float h = hash(aPos);
-      vec2 scatter = (vec2(hash(aPos + 1.7), hash(aPos + 9.2)) - 0.5) * f * 46.0;
-      vec2 p = aPos + drag * 78.0 + push * 24.0 + scatter - uShift;
+      vec2 scatter = (vec2(hash(aPos + 1.7), hash(aPos + 9.2)) - 0.5) * f * 46.0 * K;
+      vec2 p = aPos + (drag * 78.0 + push * 24.0) * K + scatter - uShift;
       vCol = picture(aPos - uShift, uRes, uT0, uT1, uAsp, uMix) * (1.0 + min(f, 1.0) * 0.5);
       vA = smoothstep(0.05, 0.35, f) * (0.5 + 0.5 * h);
       gl_PointSize = (1.4 + min(f, 1.6) * 1.3) * uDpr;

@@ -90,7 +90,7 @@ body.home { height: 100vh; height: 100svh; overflow: hidden; }
   inset: 0;
   overflow: hidden;
   background: #000;
-  cursor: pointer;
+  cursor: none;  /* the VIEW ALL MY WORK pill is the cursor here */
 }
 .slide {
   position: absolute;
@@ -168,7 +168,7 @@ body:not(.fx-on) .fx { display: none; }
 }
 @keyframes fill { from { transform: scaleY(0); } to { transform: scaleY(1); } }
 
-/* "VIEW ALL MY WORK": trails the cursor everywhere on the home page */
+/* "VIEW ALL MY WORK": it is the mouse cursor on the home page (centred on the pointer) */
 .go {
   position: fixed;
   left: 0;
@@ -186,7 +186,7 @@ body:not(.fx-on) .fx { display: none; }
 }
 /* before the mouse has moved it waits at the Figma spot (850, 566) */
 .go:not(.is-following) { left: calc(850 * var(--u)); top: calc(566 / 982 * 100svh); }
-.go.is-away { opacity: 0; }
+.go.is-following:not(.is-on) { opacity: 0; }
 body.intro-on .dots, body.intro-on .go, body.intro-on .slide-cap { opacity: 0; pointer-events: none; }
 .dots { transition: opacity .6s; }
 
