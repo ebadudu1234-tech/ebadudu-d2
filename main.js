@@ -145,9 +145,8 @@ function setupGoFollow() {
 
 /* ============ Screen-wave particles (WebGL) ============
    The current work is drawn on a canvas. Moving the mouse breaks the picture into
-   particles coloured from the image: they are dragged along the mouse's path, ripples
-   ring outwards from it, and everything settles back into the picture after ~1s.
-   Changing slide sends one ripple from the centre while the pictures cross-fade. */
+   particles coloured from the image: they are dragged along the mouse's path and
+   settle back into the picture after ~1s. No ripples. */
 function createFx(canvas) {
   const gl = canvas.getContext('webgl', { antialias: false, premultipliedAlpha: false, alpha: false });
   if (!gl || gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS) < 2) return null;
@@ -156,7 +155,7 @@ function createFx(canvas) {
   const field = `
     uniform vec4 uA[${N}];   // x, y, direction x, direction y (CSS px)
     uniform vec2 uB[${N}];   // strength, age (s)
-    const float K = 0.6667;  // size of the whole effect: 1 / 1.5 of the first version
+    const float K = 0.3333;  // size of the whole effect: 1/3 of the first version (1/1.5, then 1/2)
     void wave(vec2 p, out vec2 drag, out vec2 push, out float f) {
       drag = vec2(0.0); push = vec2(0.0); f = 0.0;
       for (int i = 0; i < ${N}; i++) {
@@ -165,12 +164,10 @@ function createFx(canvas) {
         vec2 d = p - uA[i].xy;
         float dist = length(d);
         float g = exp(-dist * dist / (12100.0 * K * K));             // soft blob around the sample
-        float ring = (50.0 + uB[i].y * 560.0) * K;                    // ripple radius grows with age
-        float w = exp(-pow((dist - ring) / (38.0 * K), 2.0));         // the ripple band
         vec2 n = d / (dist + 1.0);
         drag += uA[i].zw * g * s;
-        push += n * (w * s + g * s * 0.6);
-        f += g * s + w * s * 0.55;
+        push += n * g * s * 0.6;
+        f += g * s;
       }
     }
     vec2 cover(vec2 uv, float ia, vec2 res) {
@@ -192,7 +189,7 @@ function createFx(canvas) {
     #endif
     uniform vec2 uRes; uniform vec2 uShift; uniform sampler2D uT0, uT1; uniform vec2 uAsp; uniform float uMix;`;
 
-  // the picture, with a ripple warp and darkened where it has broken into particles
+  // the picture, pulled a little along the mouse and darkened where it has broken into particles
   const quadVS = `attribute vec2 aQ; varying vec2 vUv; void main() { vUv = aQ * 0.5 + 0.5; gl_Position = vec4(aQ, 0.0, 1.0); }`;
   const quadFS = `${head}${field}
     varying vec2 vUv;
@@ -380,7 +377,7 @@ function createFx(canvas) {
   requestAnimationFrame(frame);
 
   return {
-    // cross-fade to a new slide and send a ripple out from the centre
+    // cross-fade to a new slide
     setSlide(src, animate) {
       const [a, b] = slots;
       slots[0] = b; slots[1] = a;   // the arriving picture takes the other slot
@@ -389,7 +386,6 @@ function createFx(canvas) {
       upload(slots[1]);
       mixv = animate ? 0 : 1;
       mixFrom = performance.now();
-      if (animate) push(W / 2, H / 2, 0, 0, 1.3);
     },
   };
 }
