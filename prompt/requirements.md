@@ -135,4 +135,4 @@
 | `219b836` | 新增 2023 作品 Chayang Old Street Renewal |
 | `ff31818` | 手机端：视频在屏幕上自动静音播放、不用点；首页粒子效果手指离开后恢复 |
 | `dd52c55` | 新增 ABOUT ME 页（Version 2：Let Me Guide You） |
-| （本次） | ABOUT ME 页按参考网站的做法重做（作品地图封面、逐词显现、YOU ARE HERE 路线条） |
+| `5c181e3` | ABOUT ME 页按参考网站的做法重做（作品地图封面、逐词显现、YOU ARE HERE 路线条） |
