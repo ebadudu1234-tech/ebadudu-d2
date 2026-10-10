@@ -312,18 +312,23 @@ body.intro-on .dots, body.intro-on .go, body.intro-on .slide-cap { opacity: 0; p
   margin: 0;
   padding: 0;
   list-style: none;
+  /* like the title: only there while the card is touched */
+  opacity: 0;
+  translate: 0 6px;
+  transition: opacity .3s, translate .5s var(--settle);
 }
+.card:hover .tags { opacity: 1; translate: none; }
+/* no outline: just a blurred patch of the picture behind, with a faint tint to read on */
 .tags li {
   display: inline-flex;
   align-items: center;
   height: 23px;
   padding: 0 13px;
-  border: 1px solid #000;
   border-radius: 12.5px;
-  background: rgba(255, 255, 255, .62);
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
-  color: #000;
+  background: rgba(255, 255, 255, .16);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  color: #fff;
   font-family: var(--tag);
   font-size: 12px;
   line-height: 1;
@@ -393,9 +398,9 @@ body.intro-on .dots, body.intro-on .go, body.intro-on .slide-cap { opacity: 0; p
   transition: opacity .8s ease .2s, translate 1s var(--settle) .2s;
 }
 .p-cover.is-in h1 { opacity: 1; translate: none; }
-.p-head .tags { position: static; }
+.p-head .tags { position: static; opacity: 1; translate: none; }
 .p-sub { margin: 0 0 14px; font-size: clamp(15px, calc(18 * var(--u)), 18px); color: rgba(255, 255, 255, .78); }
-.p-head .tags li { background: var(--glass); border-color: rgba(255, 255, 255, .7); color: #fff; }
+.p-head .tags li { background: var(--glass); color: #fff; }
 
 .p-body { padding: clamp(56px, calc(110 * var(--u)), 110px) var(--right) 0 var(--left); }
 .p-intro {
@@ -489,7 +494,7 @@ body.intro-on .dots, body.intro-on .go, body.intro-on .slide-cap { opacity: 0; p
   .links { width: auto; gap: 16px; padding: 0 14px; }
   .cards { grid-template-columns: 1fr; padding-top: 84px; }
   .card { cursor: pointer; }
-  .card-title { opacity: 1; translate: none; }
+  .card-title, .card .tags { opacity: 1; translate: none; }
   .slide-cap { bottom: calc(var(--top) + 64px); }
   .p-intro { grid-template-columns: 1fr; gap: 10px; }
   .p-row { flex-direction: column; }
