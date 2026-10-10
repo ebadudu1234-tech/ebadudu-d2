@@ -65,17 +65,17 @@ const PROJECTS = [
     detail: '',
   },
   {
-    slug: 'after-dada', title: 'After Dada', year: 2026, tags: ['EDITORIAL'], cover: 0,
+    slug: 'after-dada', title: 'After Dada', year: 2025, tags: ['EDITORIAL'], cover: 0,
     intro: 'The Eye That Dreams — a zine that follows what happened after Dada, collaging surrealist images into new pages.',
     detail: 'Cut-outs, die-cut covers and loose layouts let the reader see one image hiding inside another.',
   },
   {
-    slug: 'dada-newspaper', title: 'DADA Newspaper', year: 2026, tags: ['EDITORIAL'], cover: 0,
+    slug: 'dada-newspaper', title: 'DADA Newspaper', year: 2025, tags: ['EDITORIAL'], cover: 0,
     intro: 'DADA! DADA! — a newspaper about the Dada movement. “No rules. No order. Only DADA.”',
     detail: 'Big condensed headlines crash into black-and-white figures across the spreads.',
   },
   {
-    slug: 'game-zine', title: '2000s Game Zine', year: 2026, tags: ['EDITORIAL', 'GAME'], cover: 0,
+    slug: 'game-zine', title: '2000s Game Zine', year: 2025, tags: ['EDITORIAL', 'GAME'], cover: 0,
     intro: 'A zine about the games of the 2000s — from Snake on a Nokia phone to pixel arcades — set in pixel type and game-screen colours.',
     detail: '',
   },
@@ -86,7 +86,7 @@ const PROJECTS = [
     detail: 'The identity runs from the storefront, expo booth and pop-up to the website, a learning app, an AR glasses interface, subway and street posters, banners, stationery, totes and staff merch.',
   },
   {
-    slug: 'allodox', title: 'Allodox', year: 2025, tags: ['GAME'], cover: 0,
+    slug: 'allodox', title: 'Allodox', year: 2024, tags: ['GAME'], cover: 0,
     intro: 'An interactive pixel game that simulates life with decision-making paralysis, so players who don’t struggle with choices can step into the mindset of those who do.',
     detail: 'Based on everyday dilemmas and my internship in game design, I designed the levels, scenes and missions. The goal: help people see that making choices is not so hard.',
   },

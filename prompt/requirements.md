@@ -100,3 +100,4 @@
 | `3e5c595` | Switchback 作品页加入草图 → 线稿 → 渲染图轮流替换的大图 |
 | `e54898d` | Switchback 轮播大图的替换时间从 2.6 秒缩短到 1.5 秒 |
 | `0721d79` | Ungreen Shop、Yiwugo、Nuclear Tide 改为 2024 年 |
+| （本次） | Allodox 改为 2024；After Dada、2000s Game Zine、DADA Newspaper 改为 2025；轮播是否换掉 After Dada 待定 |
