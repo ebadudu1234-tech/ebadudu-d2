@@ -151,19 +151,23 @@ function createFx(canvas) {
   const gl = canvas.getContext('webgl', { antialias: false, premultipliedAlpha: false, alpha: false });
   if (!gl || gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS) < 2) return null;
 
-  const N = 20;  // remembered mouse samples
+  const N = 40;  // remembered points along the mouse path
   const field = `
     uniform vec4 uA[${N}];   // x, y, direction x, direction y (CSS px)
     uniform vec2 uB[${N}];   // strength, age (s)
-    const float K = 0.3333;  // size of the whole effect: 1/3 of the first version (1/1.5, then 1/2)
+    uniform vec4 uBox;       // only pixels inside this box are near the trail
+    const float KA = 0.6667; // size of the broken area (first version = 1)
+    const float KD = 0.1667; // how far particles are dragged after the mouse
+    const float KS = 0.3333; // how far particles spread apart
     void wave(vec2 p, out vec2 drag, out vec2 push, out float f) {
       drag = vec2(0.0); push = vec2(0.0); f = 0.0;
+      if (p.x < uBox.x || p.y < uBox.y || p.x > uBox.z || p.y > uBox.w) return;
       for (int i = 0; i < ${N}; i++) {
         float s = uB[i].x;
         if (s < 0.002) continue;
         vec2 d = p - uA[i].xy;
         float dist = length(d);
-        float g = exp(-dist * dist / (12100.0 * K * K));             // soft blob around the sample
+        float g = exp(-dist * dist / (12100.0 * KA * KA));           // soft blob around the point
         vec2 n = d / (dist + 1.0);
         drag += uA[i].zw * g * s;
         push += n * g * s * 0.6;
@@ -197,7 +201,7 @@ function createFx(canvas) {
       vec2 p = vec2(vUv.x, 1.0 - vUv.y) * uRes;
       vec2 drag, push; float f;
       wave(p, drag, push, f);
-      vec2 q = p - (push * 9.0 + drag * 10.0) * K - uShift;
+      vec2 q = p - push * 9.0 * KS - drag * 10.0 * KD - uShift;
       vec3 c = picture(q, uRes, uT0, uT1, uAsp, uMix);
       // where it breaks the work drops to ~10% visibility, so the particles carry the picture
       float hole = smoothstep(0.1, 0.55, f);
@@ -213,8 +217,8 @@ function createFx(canvas) {
       vec2 drag, push; float f;
       wave(aPos, drag, push, f);
       float h = hash(aPos);
-      vec2 scatter = (vec2(hash(aPos + 1.7), hash(aPos + 9.2)) - 0.5) * f * 46.0 * K;
-      vec2 p = aPos + (drag * 78.0 + push * 24.0) * K + scatter - uShift;
+      vec2 scatter = (vec2(hash(aPos + 1.7), hash(aPos + 9.2)) - 0.5) * f * 46.0 * KS;
+      vec2 p = aPos + drag * 78.0 * KD + push * 24.0 * KS + scatter - uShift;
       vCol = picture(aPos - uShift, uRes, uT0, uT1, uAsp, uMix) * (1.0 + min(f, 1.0) * 0.5);
       vA = smoothstep(0.05, 0.35, f) * (0.5 + 0.5 * h);
       gl_PointSize = (1.4 + min(f, 1.6) * 1.3) * uDpr;
@@ -297,22 +301,40 @@ function createFx(canvas) {
   resize();
   addEventListener('resize', resize);
 
-  // mouse trail: every frame the mouse moved adds a sample that fades over ~1s
+  // mouse trail: points laid along the real pointer path (every coalesced event,
+  // gaps filled every SPACING px), so a fast swipe stays one smooth stroke instead
+  // of separate jumps; each point fades over ~1s
+  const SPACING = 12;
   const trail = [];
-  let mx = -1, my = -1, lx = -1, ly = -1, sx = 0, sy = 0;
-  addEventListener('pointermove', (e) => { mx = e.clientX; my = e.clientY; }, { passive: true });
+  let mx = -1, my = -1, last = null, sx = 0, sy = 0, prevNow = 0;
   const push = (x, y, dx, dy, s) => {
     trail.push({ x, y, dx, dy, s, t: performance.now() });
     if (trail.length > N) trail.shift();
   };
+  const addPoint = (x, y, ts) => {
+    if (!last) { last = { x, y, ts }; return; }
+    const dx = x - last.x, dy = y - last.y, d = Math.hypot(dx, dy);
+    if (d < SPACING) return;
+    const speed = d / Math.max(1, ts - last.ts);          // px per ms
+    const s = Math.min(1.4, Math.max(0.3, speed * 0.8));
+    const steps = Math.min(Math.ceil(d / SPACING), 10);
+    for (let k = 1; k <= steps; k++) push(last.x + (dx * k) / steps, last.y + (dy * k) / steps, dx / d, dy / d, s);
+    last = { x, y, ts };
+  };
+  addEventListener('pointermove', (e) => {
+    mx = e.clientX; my = e.clientY;
+    const list = e.getCoalescedEvents ? e.getCoalescedEvents() : [];
+    (list.length ? list : [e]).forEach((ev) => addPoint(ev.clientX, ev.clientY, ev.timeStamp));
+  }, { passive: true });
   const A = new Float32Array(N * 4), B = new Float32Array(N * 2);
-
+  const box = new Float32Array([1e6, 1e6, -1e6, -1e6]);
   const uni = (p) => {
     const get = (n) => gl.getUniformLocation(p, n);
-    return { res: get('uRes'), shift: get('uShift'), t0: get('uT0'), t1: get('uT1'), asp: get('uAsp'), mix: get('uMix'), a: get('uA'), b: get('uB'), dpr: get('uDpr') };
+    return { box: get('uBox'), res: get('uRes'), shift: get('uShift'), t0: get('uT0'), t1: get('uT1'), asp: get('uAsp'), mix: get('uMix'), a: get('uA'), b: get('uB'), dpr: get('uDpr') };
   };
   const uq = uni(quadP), up = uni(ptsP);
   const setCommon = (u) => {
+    gl.uniform4fv(u.box, box);
     gl.uniform2f(u.res, W, H);
     gl.uniform2f(u.shift, sx, sy);
     gl.uniform1i(u.t0, 0);
@@ -324,25 +346,29 @@ function createFx(canvas) {
   };
 
   const frame = (now) => {
-    // new sample when the mouse moved
-    if (mx >= 0 && lx >= 0) {
-      const dx = mx - lx, dy = my - ly, sp = Math.hypot(dx, dy);
-      if (sp > 0.6) push(mx, my, dx / sp, dy / sp, Math.min(1.5, sp / 16));
-    }
-    lx = mx; ly = my;
-    // the whole picture leans a touch towards the mouse, with lag (the "drag")
+    // time-based easing, so a dropped frame does not make anything jump
+    const dt = Math.min(0.05, prevNow ? (now - prevNow) / 1000 : 0.016);
+    prevNow = now;
+    // the whole picture leans a touch away from the mouse, easing behind it
     if (mx >= 0) {
-      sx += ((mx - W / 2) * -0.012 - sx) * 0.05;
-      sy += ((my - H / 2) * -0.012 - sy) * 0.05;
+      const ease = 1 - Math.exp(-dt * 3);
+      sx += ((mx - W / 2) * -0.012 - sx) * ease;
+      sy += ((my - H / 2) * -0.012 - sy) * ease;
     }
+    let x0 = 1e6, y0 = 1e6, x1 = -1e6, y1 = -1e6;
     for (let i = 0; i < N; i++) {
       const s = trail[i];
       if (!s) { B[i * 2] = 0; continue; }
       const age = (now - s.t) / 1000;
+      const st = s.s * Math.exp(-age / 0.75);
       A.set([s.x, s.y, s.dx, s.dy], i * 4);
-      B[i * 2] = s.s * Math.exp(-age / 0.75);
+      B[i * 2] = st;
       B[i * 2 + 1] = age;
+      if (st > 0.002) { x0 = Math.min(x0, s.x); y0 = Math.min(y0, s.y); x1 = Math.max(x1, s.x); y1 = Math.max(y1, s.y); }
     }
+    // pixels farther than this from every live point are untouched, so they skip the maths
+    const m = 110 * 0.6667 * 3.2 + 30;
+    box.set(x1 < x0 ? [1e6, 1e6, -1e6, -1e6] : [x0 - m, y0 - m, x1 + m, y1 + m]);
     if (mixv < 1) mixv = Math.min(1, (now - mixFrom) / 1100);
     upload(slots[1]);
     if (mixv < 1) upload(slots[0]);
