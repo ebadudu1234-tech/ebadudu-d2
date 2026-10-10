@@ -93,14 +93,13 @@
 - 首页的粒子效果：手指离开屏幕后画面恢复，下一次触碰不会被当成一次很大的甩动。
 
 ## 5E. ABOUT ME 页（about.html）
-- 文字来自 `about me\putin\About Me.txt`，**D2 用 Version 2「Let Me Guide You」**，原文照搬、顺序不变；**没有跳到作品的链接**，唯一的链接是邮箱。
-- **新方向：一次"带路的参观"**（参考笔记里 KesselsKramer 一屏一句 + 边上的点、Oxman / Ning Huang 文字依次出现、"地标 / You are here"），用 D2 自己的风格：
-  - 和首页一样**一整屏、不滚动**：滚轮、方向键、上下/左右滑动、点击任意处（绿色胶囊光标写着 NEXT）或右边的点，都是**一次走一站**；最后一站写 BACK TO START，再点回到开头。一次长滑动只走一站。
-  - 一共 6 站：封面（LET ME GUIDE YOU + Zihe Wang + 两个毛玻璃标签）→ 01–04 四段 → 最后 "LET ME GUIDE YOU."（大写）+ GET IN TOUCH 邮箱。
-  - 每站：**重点句大字**（Rokkitt 64px，到站时一个词一个词升起），**其余小字放在毛玻璃卡片里**（右下；第三段小字在前、大字在后，卡片在左上）。
-  - 背景：每站换一张作品封面，**强烈模糊、压暗、缓慢漂移**，像经过的地标（不可点击）。
-  - 右边是首页同款的竖排点，当前站旁边有绿色 "YOU ARE HERE"。
-  - 手机：没有鼠标光标，底部有绿色 NEXT 按钮；文字避开右边的点。
+- 文字来自 `about me\putin\About Me.txt`，**D2 用 Version 2「Let Me Guide You」**。**每一句都是原文**，但**不按段落排，按重要程度重新组合**；**没有跳到作品的链接**，唯一的链接是邮箱。
+- **一次带路的参观，只有 3 站**（两次滚动 / 方向键 / 滑动 / 点击就看完）：和首页一样一整屏、不滚动，一次走一站；右边首页同款的点 + 绿色 "YOU ARE HERE"；鼠标是绿色胶囊 NEXT（最后一站 BACK TO START）；背景每站一张强烈模糊、压暗、缓慢漂移的作品封面（不可点）。参考：KesselsKramer、Oxman / Ning Huang、"地标 / You are here"。
+  1. **我是谁 + 核心观点**：左边 LET ME GUIDE YOU（大写最大字）+ Zihe Wang + 两个标签；右边大字 "Long text can be overwhelming, but one clear path tells you where you are. To me, design should guide people."，下面毛玻璃卡片小字说做什么（视觉传达和信息设计）。
+  2. **三个主题并排**，每栏一句中号重点 + 毛玻璃卡片小字：**HOW I FIND MY WAY**（"I find my way by landmarks."）/ **WHO I GUIDE**（"I learned that guiding people also means…"）/ **WHEN A PATH IS BLOCKED**（"When a path is blocked, I do not give up."）。
+  3. **结尾**：LET ME GUIDE YOU.（大写）+ GET IN TOUCH 邮箱卡片。
+- 大字的词到站时一个一个升起；系统开了"减少动态效果"时直接出现。
+- **手机上不做翻页**：三站上下排成普通滚动页面（约 2.4 屏）。
 
 ## 6. 待办 / 待确认
 - [ ] PLAY AREA 页面还没有（Figma 里也没有）。ABOUT ME 已完成。
@@ -140,3 +139,4 @@
 | `dd52c55` | 新增 ABOUT ME 页（Version 2：Let Me Guide You） |
 | `5c181e3` | ABOUT ME 页按参考网站的做法重做（作品地图封面、逐词显现、YOU ARE HERE 路线条） |
 | `e3343aa` | ABOUT ME 换方向：一屏一站的带路参观（滚轮/键盘/滑动/点击走一站，模糊地标背景，YOU ARE HERE），去掉作品链接，重点句大字、其余小字放毛玻璃卡片 |
+| （本次） | ABOUT ME 集中到 3 站：不按段落、按重要程度重组（我是谁+核心观点 / 三个主题 / 结尾），手机为普通滚动页 |

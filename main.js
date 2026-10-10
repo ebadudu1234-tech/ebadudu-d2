@@ -1065,6 +1065,13 @@ function setupAbout(root) {
   bg.innerHTML = stops.map((_, i) => `<img src="${thumbSrc(list[(i * 3) % list.length])}" alt="" decoding="async">`).join('');
   const bgs = [...bg.children];
 
+  // phones: no tour, every stop shows and the page scrolls
+  if (!matchMedia('(min-width: 721px)').matches) {
+    stops.forEach((s) => s.classList.add('is-on'));
+    bgs[0]?.classList.add('is-on');
+    return;
+  }
+
   // the dots on the right, and "you are here" beside the current one
   const dots = document.getElementById('tour-dots');
   dots.innerHTML = stops.map((_, i) => `<button type="button" aria-label="Stop ${i + 1}"></button>`).join('');

@@ -20,51 +20,60 @@
   </nav>
 </header>
 
-<!-- About Me, version 2 ("Let Me Guide You"), as a guided tour: like the home page, one full
-     screen that does not scroll; the wheel, the arrow keys, a swipe or a click move you one
-     stop on. Each stop is one paragraph, word for word: its key sentence large (the words rise
-     in one by one), the rest small on a glass card. Behind, a work passes by as a blurred
-     landmark. On the right, the home page's dots, with "you are here" at the current stop.
+<!-- About Me, version 2 ("Let Me Guide You"), as a guided tour of three stops: like the home page,
+     one full screen that does not scroll; the wheel, the arrow keys, a swipe or a click move you one
+     stop on. Set by importance, not by paragraph (every sentence is the statement's own, word for
+     word, only regrouped): 1. who I am and the one idea everything hangs on; 2. the rest by topic,
+     each topic's key line large and the rest small on a glass card; 3. the closing line and the
+     email. Behind, a work passes by as a blurred landmark; on the right, the home page's dots with
+     "you are here". On phones it is a plain scrolling page.
      Ways borrowed from the reference survey: one statement per screen with dots on the edge
      (KesselsKramer), words revealed in sequence (Oxman, Ning Huang), the landmark /
      "you are here" idea (statement-to-website.md). -->
 <main class="tour" id="tour">
   <div class="tour-bg" id="tour-bg" aria-hidden="true"></div>
 
+  <!-- stop 1: who, and the one idea everything else hangs on -->
   <section class="stop stop-cover">
-    <h1 class="stop-big" data-words>Let Me Guide You</h1>
-    <div class="stop-meta">
-      <p class="p-sub">Zihe Wang</p>
-      <ul class="tags"><li>VISUAL COMMUNICATION</li><li>INFORMATION DESIGN</li></ul>
+    <div class="stop-split">
+      <div>
+        <h1 class="stop-title" data-words>Let Me Guide You</h1>
+        <div class="stop-meta">
+          <p class="p-sub">Zihe Wang</p>
+          <ul class="tags"><li>VISUAL COMMUNICATION</li><li>INFORMATION DESIGN</li></ul>
+        </div>
+      </div>
+      <div class="stop-lead">
+        <p class="stop-big" data-words>Long text can be overwhelming, but one clear path tells you where you are. To me, design should guide people.</p>
+        <p class="stop-small glass">I work in visual communication and information design, and I create visuals that act as landmarks, so people can find what they need at a glance.</p>
+      </div>
     </div>
   </section>
 
-  <section class="stop">
-    <p class="stop-num">01 / 04</p>
-    <p class="stop-big" data-words>I find my way by landmarks.</p>
-    <p class="stop-small glass">After walking a route once, I remember its buildings and details almost like a photograph, and the next time I know exactly where to go. I think this is my special skill. When I travel and someone takes the wrong turn, I just say, "Follow me, I know where to go."</p>
+  <!-- stop 2: the rest, by topic rather than by paragraph; each topic's key line large -->
+  <section class="stop stop-three">
+    <div class="stop-cols">
+      <article>
+        <p class="stop-num">HOW I FIND MY WAY</p>
+        <p class="stop-mid" data-words>I find my way by landmarks.</p>
+        <p class="stop-small glass">After walking a route once, I remember its buildings and details almost like a photograph, and the next time I know exactly where to go. I think this is my special skill. When I travel and someone takes the wrong turn, I just say, "Follow me, I know where to go."</p>
+      </article>
+      <article>
+        <p class="stop-num">WHO I GUIDE</p>
+        <p class="stop-mid" data-words>I learned that guiding people also means seeing what each person is good at, and encouraging them.</p>
+        <p class="stop-small glass">I design for everyday people, like the community members I registered as a hospital volunteer during COVID. With teammates, I keep everything clear and organized. On my first project as a team leader, I was strong and strict, and it caused conflicts with my team.</p>
+      </article>
+      <article>
+        <p class="stop-num">WHEN A PATH IS BLOCKED</p>
+        <p class="stop-mid" data-words>When a path is blocked, I do not give up.</p>
+        <p class="stop-small glass">I like a twist on a Chinese saying: "Nothing is hard if you are willing to give up." But I never give up the goal, only the route that is not working. In my free time, I go on road trips, and every trip reminds me how big the world is and how many routes are still waiting for me to explore.</p>
+      </article>
+    </div>
   </section>
 
-  <section class="stop">
-    <p class="stop-num">02 / 04</p>
-    <p class="stop-big" data-words>Long text can be overwhelming, but one clear path tells you where you are. To me, design should guide people.</p>
-    <p class="stop-small glass">I work in visual communication and information design, and I create visuals that act as landmarks, so people can find what they need at a glance.</p>
-  </section>
-
-  <section class="stop">
-    <p class="stop-num">03 / 04</p>
-    <p class="stop-small glass stop-first">I design for everyday people, like the community members I registered as a hospital volunteer during COVID. With teammates, I keep everything clear and organized. On my first project as a team leader, I was strong and strict, and it caused conflicts with my team.</p>
-    <p class="stop-big" data-words>I learned that guiding people also means seeing what each person is good at, and encouraging them.</p>
-  </section>
-
-  <section class="stop">
-    <p class="stop-num">04 / 04</p>
-    <p class="stop-big" data-words>When a path is blocked, I do not give up.</p>
-    <p class="stop-small glass">I like a twist on a Chinese saying: "Nothing is hard if you are willing to give up." But I never give up the goal, only the route that is not working. In my free time, I go on road trips, and every trip reminds me how big the world is and how many routes are still waiting for me to explore.</p>
-  </section>
-
+  <!-- stop 3: the closing line, and how to reach me -->
   <section class="stop stop-end">
-    <p class="stop-big" data-words>Let me guide you.</p>
+    <p class="stop-title" data-words>Let me guide you.</p>
     <p class="stop-small glass"><span class="stop-label">GET IN TOUCH</span><a class="a-mail" href="mailto:ebadudu1234@gmail.com">ebadudu1234@gmail.com</a></p>
   </section>
 </main>

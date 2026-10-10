@@ -373,8 +373,8 @@ body.intro-on .dots, body.intro-on .go, body.intro-on .slide-cap { opacity: 0; p
 .p-cover.is-in .media { scale: 1; }
 .p-cover.contain .media img { object-fit: contain; }
 /* ============ About Me: a guided tour ============
-   One full screen that does not scroll (like the home page); one stop per paragraph: the key
-   sentence large, the rest small on a glass card; a blurred landmark behind; the home page's
+   One full screen that does not scroll (like the home page); three stops set by importance: the
+   title and the key idea, the topics, the closing line - key lines large, the rest small on glass; a blurred landmark behind; the home page's
    dots on the right with "you are here"; the green pill is the cursor and says NEXT. */
 body.tour-page { height: 100vh; height: 100svh; overflow: hidden; }
 .tour { position: fixed; inset: 0; overflow: hidden; background: var(--bg); }
@@ -402,51 +402,71 @@ body.tour-page { height: 100vh; height: 100svh; overflow: hidden; }
   flex-direction: column;
   justify-content: flex-end;
   gap: clamp(20px, calc(28 * var(--u)), 28px);
-  padding: 0 calc(var(--right) + 60px) clamp(90px, 16vh, 150px) var(--left);
+  padding: 0 calc(var(--right) + 160px) clamp(90px, 14vh, 140px) var(--left);  /* clear of the dots and "you are here" */
   visibility: hidden;
   pointer-events: none;
 }
 .stop.is-on { visibility: visible; pointer-events: auto; }
-.stop-num { margin: 0; font-weight: 700; font-size: 18px; color: var(--dim); }
-.stop-big {
-  max-width: 17em;
+.stop-num { margin: 0; font-weight: 700; font-size: 15px; letter-spacing: .04em; color: var(--dim); }
+/* three sizes, by importance: the title, the key idea, each topic's key line */
+.stop-title {
   margin: 0;
-  font-weight: 400;
-  font-size: clamp(32px, calc(64 * var(--u)), 64px);
-  line-height: 1.1;
-}
-/* the words rise in one after another when the stop arrives */
-.stop-big .w {
-  display: inline-block;
-  opacity: 0;
-  translate: 0 .5em;
-  transition: opacity .5s ease, translate .8s var(--settle);
-  transition-delay: calc(var(--i) * 45ms + 150ms);
-}
-.stop.is-on .stop-big .w { opacity: 1; translate: none; }
-.stop-small {
-  align-self: flex-end;
-  width: min(100%, 440px);
-  margin: 0;
-  padding: 18px 22px;
-  font-size: clamp(15px, calc(17 * var(--u)), 17px);
-  line-height: 1.5;
-  opacity: 0;
-  translate: 0 16px;
-  transition: opacity .6s ease .45s, translate .9s var(--settle) .45s;
-}
-.stop.is-on .stop-small { opacity: 1; translate: none; }
-.stop-small.stop-first { align-self: flex-start; }
-/* a darker tint than the nav pills, so long white text stays easy to read */
-.stop-small.glass { background: rgba(255, 255, 255, .14); }
-/* the cover and the last stop: the title-sized line, set like the project covers */
-.stop-cover .stop-big, .stop-end .stop-big {
   font-weight: 700;
   font-size: clamp(48px, calc(120 * var(--u)), 120px);
   line-height: .95;
   letter-spacing: -.01em;
   text-transform: uppercase;
 }
+.stop-big {
+  margin: 0;
+  font-size: clamp(26px, calc(44 * var(--u)), 44px);
+  line-height: 1.15;
+}
+.stop-mid {
+  margin: 0;
+  font-size: clamp(22px, calc(30 * var(--u)), 30px);
+  line-height: 1.2;
+}
+/* the words rise in one after another when the stop arrives */
+[data-words] .w {
+  display: inline-block;
+  opacity: 0;
+  translate: 0 .5em;
+  transition: opacity .5s ease, translate .8s var(--settle);
+  transition-delay: calc(var(--i) * 40ms + 150ms);
+}
+.stop.is-on [data-words] .w { opacity: 1; translate: none; }
+.stop-small {
+  margin: 0;
+  padding: 16px 20px;
+  font-size: clamp(14px, calc(16 * var(--u)), 16px);
+  line-height: 1.5;
+  opacity: 0;
+  translate: 0 16px;
+  transition: opacity .6s ease .45s, translate .9s var(--settle) .45s;
+}
+.stop.is-on .stop-small { opacity: 1; translate: none; }
+/* a darker tint than the nav pills, so long white text stays easy to read */
+.stop-small.glass { background: rgba(255, 255, 255, .14); }
+/* stop 1: the title on the left, the key idea on the right */
+.stop-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  align-items: end;
+  gap: clamp(32px, calc(80 * var(--u)), 80px);
+}
+.stop-lead { display: grid; gap: 20px; }
+/* stop 2: three topics side by side */
+.stop-cols {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+  gap: clamp(16px, calc(28 * var(--u)), 28px);
+}
+.stop-cols article { display: grid; align-content: start; gap: 16px; }
+/* stop 3: the closing line, then the email */
+.stop-end .stop-small { align-self: flex-start; }
+.stop-meta { margin-top: 22px; }
 .stop-meta .p-sub { margin: 0 0 14px; }
 .stop-meta .tags { position: static; opacity: 1; translate: none; }
 .stop-meta .tags li { background: var(--glass); color: #fff; }
@@ -617,9 +637,13 @@ body.tour-page { height: 100vh; height: 100svh; overflow: hidden; }
   .card-title, .card .tags { opacity: 1; translate: none; }
   .slide-cap { bottom: calc(var(--top) + 64px); }
   .p-intro { grid-template-columns: 1fr; gap: 10px; }
-  .stop { padding: 0 calc(var(--right) + 24px) 120px var(--left); justify-content: center; }
-  .stop-small, .stop-small.stop-first { align-self: stretch; width: auto; }
-  .tour-here { display: none; }
+  /* phones: the tour becomes a plain page that scrolls */
+  body.tour-page { height: auto; overflow: auto; }
+  .tour { position: relative; inset: auto; overflow: visible; }
+  .tour-bg { position: fixed; }
+  .stop { position: relative; inset: auto; visibility: visible; pointer-events: auto; padding: 110px var(--right) 40px var(--left); }
+  .stop-split, .stop-cols { grid-template-columns: 1fr; }
+  .tour-page .dots, .tour-here, .tour-next { display: none; }
   .p-row { flex-direction: column; }
   .p-row figure { flex: none; }
   .p-next { cursor: pointer; }
