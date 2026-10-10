@@ -1,6 +1,7 @@
 # serve.ps1 — tiny static server for Windows (no Python / Node needed), with Range support for video.
 # Usage:  powershell -ExecutionPolicy Bypass -File serve.ps1 [-Port 8000]
-param([int]$Port = 8000)
+# Without -Port it uses $env:PORT (set by the preview launcher), else 8000.
+param([int]$Port = $(if ($env:PORT) { [int]$env:PORT } else { 8000 }))
 
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $types = @{
