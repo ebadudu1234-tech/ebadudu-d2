@@ -444,6 +444,10 @@ body.intro-on .dots, body.intro-on .go, body.intro-on .slide-cap { opacity: 0; p
 .p-seq.is-in { opacity: 1; translate: none; }
 .p-seq img { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; object-fit: contain; opacity: 0; transition: opacity .6s ease; }
 .p-seq img.is-on { opacity: 1; }
+/* a normal gallery image whose sketch and render take turns */
+.p-row figure.swap { position: relative; background: #fff; }
+.p-row figure.swap img { position: absolute; inset: 0; object-fit: contain; opacity: 0; transition: opacity .6s ease; }
+.p-row figure.swap img.is-on { opacity: 1; }
 .p-row.single figure { flex: none; width: min(100%, calc(88vh * var(--r))); }
 .p-row img, .p-row video { width: 100%; height: 100%; max-width: none; object-fit: cover; }
 

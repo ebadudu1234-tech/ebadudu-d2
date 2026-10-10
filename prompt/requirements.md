@@ -76,6 +76,7 @@
 - 下面是 "ABOUT THIS WORK" 和作品说明。
 - 图片两两一行，同一行高度一致，按原比例显示，不裁切；间距 9px、圆角 8px，和 WORK 页一致。
 - **Switchback**：在 "ABOUT THIS WORK" 介绍下面放一张大图，手绘草图 → 线稿 → 带标注的渲染图**轮流替换**，从草图开始（详见总笔记 3.6.1，`data.js` 里的 `sequence`）。
+- **Planting Pen**：三对草图 ↔ 渲染图在图集里按正常大小、每 1.5 秒互换（草图先）；方盒草图和 CLOSED FORM 不出现（详见总笔记 3.6.2）。
 - 最下面是"下一个作品"的大图链接，鼠标移上去出现绿色 "NEXT WORK" 胶囊。
 - 视频作品的封面直接播放视频，并跳过 ArtCenter 片头。
 
@@ -101,3 +102,4 @@
 | `e54898d` | Switchback 轮播大图的替换时间从 2.6 秒缩短到 1.5 秒 |
 | `0721d79` | Ungreen Shop、Yiwugo、Nuclear Tide 改为 2024 年 |
 | `f07e707` | Allodox 改为 2024；After Dada、2000s Game Zine、DADA Newspaper 改为 2025；轮播是否换掉 After Dada 待定 |
+| （本次） | Planting Pen 草图 ↔ 渲染图互换，删掉方盒草图和 CLOSED FORM |

@@ -924,15 +924,25 @@ function renderProject(root) {
   const heroIdx = p.hero || 0;
   const hero = media[heroIdx];
   // `sequence`: images that take turns in one big frame under the intro (e.g. sketch → line → render)
-  const seqIdx = p.sequence || [];
-  const seq = seqIdx.map((i) => media[i]).filter(Boolean);
-  const rest = media.filter((_, i) => i !== heroIdx && !seqIdx.includes(i));
+  // `swaps`: pairs that take turns inside a normal gallery image (sketch first); `hide`: left off the site
+  const seq = (p.sequence || []).map((i) => media[i]).filter(Boolean);
+  const swaps = p.swaps || [];
+  const skip = new Set([heroIdx, ...(p.sequence || []), ...(p.hide || []), ...swaps.flatMap((g) => g.slice(1))]);
+  const rest = [];
+  media.forEach((m, i) => {
+    if (skip.has(i)) return;
+    const g = swaps.find((s) => s[0] === i);
+    rest.push(g ? { ...m, swap: g.map((k) => media[k]).filter(Boolean) } : m);
+  });
   const seqHtml = seq.length
     ? `<figure class="p-seq" style="--r:${(seq[0].w / seq[0].h).toFixed(4)}">${
       seq.map((m, i) => `<img src="${m.src}" alt="${esc(p.title)}"${i ? '' : ' class="is-on"'} decoding="async">`).join('')}</figure>`
     : '';
 
-  const fig = (m, i) => m.type === 'video'
+  const fig = (m, i) => m.swap
+    ? `<figure class="swap" style="--r:${(m.w / m.h).toFixed(4)};--d:${i * 0.1}s">${
+      m.swap.map((s, k) => `<img src="${s.src}" alt="${esc(p.title)}"${k ? '' : ' class="is-on"'} loading="lazy" decoding="async">`).join('')}</figure>`
+    : m.type === 'video'
     ? `<figure style="--r:${(m.w / m.h).toFixed(4)};--d:${i * 0.1}s"><video src="${m.src}" poster="${m.poster}" controls playsinline preload="none"></video></figure>`
     : `<figure style="--r:${(m.w / m.h).toFixed(4)};--d:${i * 0.1}s"><img src="${m.src}" width="${m.w}" height="${m.h}" alt="${esc(p.title)}" loading="lazy" decoding="async"></figure>`;
   let rows = '';
@@ -967,8 +977,7 @@ function renderProject(root) {
   requestAnimationFrame(() => root.querySelector('.p-cover').classList.add('is-in'));
   reveal('.p-row figure, .p-seq');
   setupFollow('.p-next');
-  const seqEl = root.querySelector('.p-seq');
-  if (seqEl) playSequence(seqEl);
+  root.querySelectorAll('.p-seq, figure.swap').forEach((el) => playSequence(el));
 }
 
 /* The sequence frame: images cross-fade in turn, starting from the first (the sketch)

@@ -12,6 +12,8 @@
    hoverVideo: which video plays when the cover is hovered (default: the first video)
    start    : seconds to skip at the head of the cover / hero video (title card)
    sequence : media items that take turns in one big frame under the intro, in order
+   swaps    : pairs [sketch, render] that take turns inside a normal gallery image
+   hide     : media items left off the site
    fit      : 'contain' shows the hero without cropping (for tall pages)
    intro    : paragraph beside the first image on the project page
    detail   : paragraph further down the project page
@@ -35,7 +37,10 @@ const PROJECTS = [
     detail: 'The editorial system extends into an exhibition proposal, with wayfinding graphics and posters placed in the gallery space.',
   },
   {
+    // each sketch takes turns with its render (cup box, book box, two-layer box); the square-box
+    // sketch and the labelled CLOSED FORM render are left off
     slug: 'planting-pen', title: 'Planting Pen', year: 2026, tags: ['PRODUCT', 'PACKAGING'], cover: 0,
+    swaps: [[4, 9], [5, 8], [7, 10]], hide: [6, 11],
     intro: 'A planting kit shaped like a pen set: seed cartridges, pots and tools packed into a modular box that opens like a book.',
     detail: 'The process moves from structure sketches to clean three-view renders, then to the green-and-yellow Planting Pen packaging, seed refills and a Daily Sprout retail stand.',
   },
