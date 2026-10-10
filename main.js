@@ -973,7 +973,7 @@ function renderProject(root) {
 
 /* The sequence frame: images cross-fade in turn, starting from the first (the sketch)
    when the frame comes into view */
-function playSequence(el, hold = 2600) {
+function playSequence(el, hold = 1500) {
   const imgs = [...el.querySelectorAll('img')];
   let n = 0, timer = 0;
   const go = () => {
