@@ -99,4 +99,4 @@
 | `d205749` | 点击 VIEW (ALL) MY WORK 时绿色背景变为 80% 不透明，作为点击反馈 |
 | `3e5c595` | Switchback 作品页加入草图 → 线稿 → 渲染图轮流替换的大图 |
 | `e54898d` | Switchback 轮播大图的替换时间从 2.6 秒缩短到 1.5 秒 |
-| （本次） | Ungreen Shop、Yiwugo、Nuclear Tide 改为 2024 年 |
+| `0721d79` | Ungreen Shop、Yiwugo、Nuclear Tide 改为 2024 年 |
