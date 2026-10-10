@@ -20,7 +20,7 @@
    sequence  : media items that take turns in one big frame under the intro, in order
    swaps     : pairs [sketch, render] that take turns inside a normal gallery image
    hide      : media items left off the site
-   big       : media items shown on their own, full width, under the intro (e.g. a floor plan)
+   big       : media items shown on their own, full width, at their own place in the gallery
    pairs     : [a, b] media items that always sit side by side in one row
    ========================================================= */
 const PROJECTS = [
@@ -106,7 +106,7 @@ const PROJECTS = [
     ],
   },
   {
-    slug: 'code-for-fun', title: 'Code For Fun: Where Play Meets Purpose', year: 2025, tags: ['BRAND', 'SPACE', 'UI'], cover: 0,
+    slug: 'code-for-fun', title: 'Code For Fun: Where Play Meets Purpose', year: 2025, tags: ['BRAND', 'SPACE', 'UI'], cover: 0, big: [3, 10],
     subtitle: 'Brand identity, space, UI',
     text: [
       `Code For Fun is a coding education brand for kids aged 9 and up. Kids want fun, parents want real outcomes, and schools need something that can scale. Most platforms are only playful or too academic. I wanted one brand that is playful but serious.`,

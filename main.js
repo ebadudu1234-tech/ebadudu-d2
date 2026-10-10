@@ -931,10 +931,10 @@ function renderProject(root) {
   // `sequence`: images that take turns in one big frame under the intro (e.g. sketch → line → render)
   // `swaps`: pairs that take turns inside a normal gallery image (sketch first); `hide`: left off the site
   const seq = (p.sequence || []).map((i) => media[i]).filter(Boolean);
-  // `big`: images shown on their own, full width, in the same place as the sequence frame
-  const big = (p.big || []).map((i) => media[i]).filter(Boolean);
+  // `big`: images shown on their own, full width, where they fall in the gallery
+  const bigSet = new Set(p.big || []);
   const swaps = p.swaps || [];
-  const skip = new Set([heroIdx, ...(p.sequence || []), ...(p.big || []), ...(p.hide || []), ...swaps.flatMap((g) => g.slice(1))]);
+  const skip = new Set([heroIdx, ...(p.sequence || []), ...(p.hide || []), ...swaps.flatMap((g) => g.slice(1))]);
   const rest = [];
   media.forEach((m, i) => {
     if (skip.has(i)) return;
@@ -945,7 +945,6 @@ function renderProject(root) {
     ? `<figure class="p-seq" style="--r:${(seq[0].w / seq[0].h).toFixed(4)}">${
       seq.map((m, i) => `<img src="${m.src}" alt="${esc(p.title)}"${i ? '' : ' class="is-on"'} decoding="async">`).join('')}</figure>`
     : '';
-  const bigHtml = big.map((m) => `<figure class="p-seq p-big" style="--r:${(m.w / m.h).toFixed(4)}"><img src="${m.src}" alt="${esc(p.title)}" class="is-on" decoding="async"></figure>`).join('');
 
   const fig = (m, i) => m.swap
     ? `<figure class="swap" style="--r:${(m.w / m.h).toFixed(4)};--d:${i * 0.1}s">${
@@ -957,8 +956,17 @@ function renderProject(root) {
   const paired = new Map((p.pairs || []).flatMap(([a, b]) => [[a, b], [b, a]]));
   let rows = '';
   for (let i = 0; i < rest.length;) {
-    const fixedNext = rest[i + 2] && paired.get(rest[i + 1]?.idx) === rest[i + 2].idx;
-    const n = paired.get(rest[i].idx) === rest[i + 1]?.idx || (rest[i + 1] && !fixedNext && !paired.has(rest[i].idx)) ? 2 : 1;
+    const m = rest[i];
+    if (bigSet.has(m.idx)) {
+      rows += `<figure class="p-seq p-big" style="--r:${(m.w / m.h).toFixed(4)}">${m.type === 'video'
+        ? `<video src="${m.src}" poster="${m.poster}" class="is-on" controls playsinline preload="none"></video>`
+        : `<img src="${m.src}" alt="${esc(p.title)}" class="is-on" loading="lazy" decoding="async">`}</figure>`;
+      i += 1;
+      continue;
+    }
+    // a big image or the start of a fixed pair right after this one leaves this one alone in its row
+    const nextTaken = rest[i + 1] && (bigSet.has(rest[i + 1].idx) || (rest[i + 2] && paired.get(rest[i + 1].idx) === rest[i + 2].idx));
+    const n = paired.get(m.idx) === rest[i + 1]?.idx || (rest[i + 1] && !nextTaken && !paired.has(m.idx)) ? 2 : 1;
     const pair = rest.slice(i, i + n);
     rows += `<div class="p-row${pair.length === 1 ? ' single' : ''}">${pair.map(fig).join('')}</div>`;
     i += n;
@@ -976,7 +984,7 @@ function renderProject(root) {
         <p class="p-label">ABOUT THIS WORK</p>
         <div>${(p.text || [p.intro, p.detail].filter(Boolean)).map((t) => `<p class="p-text">${esc(t)}</p>`).join('')}</div>
       </div>
-      ${seqHtml}${bigHtml}
+      ${seqHtml}
       <div class="p-gallery">${rows}</div>
     </div>
     <a class="p-next" href="${projectUrl(next)}"><img src="${coverSrc(next)}" alt="" loading="lazy"><span><small>Next work</small>${esc(next.title)}</span></a>`;
