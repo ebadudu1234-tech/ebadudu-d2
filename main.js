@@ -57,81 +57,377 @@ function setupFollow(selector) {
   document.addEventListener('pointerleave', () => pill.classList.remove('is-on'));
 }
 
-/* ============ Home: full-screen slides ============ */
-function renderSlides(root) {
+/* ============ Home: one screen, works play one after another ============ */
+const SLIDE_MS = 6000;
+
+function setupHome() {
   const list = SLIDES.map(bySlug).filter(Boolean);
-  root.innerHTML = list.map((p, i) => `
-    <section class="slide" data-slug="${p.slug}" id="s${i + 1}">
-      <a class="slide-media${p.fit === 'contain' ? ' contain' : ''}" href="${projectUrl(p)}" aria-label="${esc(p.title)}">
-        <img src="${coverSrc(p)}" alt="${esc(p.title)}"${i ? ' loading="lazy"' : ''} decoding="async">
-      </a>
-      <a class="slide-cap glass" href="${projectUrl(p)}"><b>${esc(p.title)}</b><span>${p.year} · ${p.tags.join(' / ')}</span></a>
-    </section>`).join('');
-
+  const slidesEl = document.getElementById('slides');
   const dots = document.getElementById('dots');
-  dots.innerHTML = list.map((p, i) => `<button type="button" aria-label="${esc(p.title)}"></button>`).join('');
-  const slides = [...root.children];
-  const buttons = [...dots.children];
-  buttons.forEach((b, i) => b.addEventListener('click', () => slides[i].scrollIntoView({ behavior: 'smooth' })));
+  const cap = document.getElementById('cap');
+  const stage = document.getElementById('stage');
 
-  // works with a video play it while their slide is on screen
-  const clips = new Map();
-  const setActive = (slide) => {
-    slides.forEach((s, i) => {
-      const on = s === slide;
-      s.classList.toggle('is-on', on);
-      buttons[i].setAttribute('aria-current', String(on));
-      const p = bySlug(s.dataset.slug);
-      const m = videoOf(p);
-      if (!m) return;
-      if (on) {
-        let v = clips.get(s);
-        if (!v) {
-          v = videoEl(m, p.start, { poster: coverSrc(p), preload: 'auto' });
-          s.querySelector('.slide-media').append(v);
-          clips.set(s, v);
-        }
-        v.play().catch(() => {});
-      } else clips.get(s)?.pause();
-    });
+  // each slide: the cover still, plus its video (if any) which plays while the slide is on
+  const slides = list.map((p) => {
+    const el = document.createElement('div');
+    el.className = 'slide';
+    const img = new Image();
+    img.src = coverSrc(p);
+    img.alt = p.title;
+    el.append(img);
+    const m = videoOf(p);
+    let video = null;
+    if (m) {
+      video = videoEl(m, p.start, { poster: null, preload: 'none' });
+      video.addEventListener('playing', () => el.classList.add('is-playing'));
+      el.append(video);
+    }
+    slidesEl.append(el);
+    return { p, el, img, video };
+  });
+  dots.style.setProperty('--slide-ms', `${SLIDE_MS}ms`);
+  dots.innerHTML = list.map((p) => `<button type="button" aria-label="${esc(p.title)}"></button>`).join('');
+  const buttons = [...dots.children];
+
+  const fx = createFx(document.getElementById('fx'));
+  if (fx) document.body.classList.add('fx-on');
+
+  let current = -1, timer = 0;
+  const show = (i) => {
+    i = (i + slides.length) % slides.length;
+    if (i === current) return;
+    const prev = slides[current];
+    current = i;
+    const s = slides[i];
+    if (prev) {
+      prev.el.classList.remove('is-on', 'is-playing');
+      prev.video?.pause();
+    }
+    s.el.classList.add('is-on');
+    if (s.video) {
+      s.video.preload = 'auto';
+      s.video.play().catch(() => {});
+    }
+    buttons.forEach((b, n) => b.setAttribute('aria-current', String(n === i)));
+    if (fx) fx.setSlide(s, !!prev);
+    // caption swaps with a little fade
+    cap.classList.add('swap');
+    setTimeout(() => {
+      cap.href = projectUrl(s.p);
+      cap.querySelector('b').textContent = s.p.title;
+      cap.querySelector('span').textContent = `${s.p.year} · ${s.p.tags.join(' / ')}`;
+      cap.classList.remove('swap');
+    }, prev ? 280 : 0);
+    clearTimeout(timer);
+    timer = setTimeout(() => show(current + 1), SLIDE_MS);
   };
-  const io = new IntersectionObserver((entries) => entries.forEach((e) => { if (e.isIntersecting) setActive(e.target); }), { threshold: 0.6 });
-  slides.forEach((s) => io.observe(s));
+  buttons.forEach((b, n) => b.addEventListener('click', () => show(n)));
+  addEventListener('keydown', (e) => {
+    if (document.body.classList.contains('intro-on')) return;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') show(current + 1);
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') show(current - 1);
+  });
+  // the whole picture is the "VIEW ALL MY WORK" button
+  stage.addEventListener('click', () => { location.href = 'work.html'; });
+  show(0);
+  setupGoFollow();
 }
 
-/* ============ Begin animation (Figma "begin animation" frames) ============
-   7 cards on the 1512×982 frame: scattered (A) → gathered (B) → stacked (C) →
-   the top card slips behind and grows to full screen while the stack falls away. */
-const P = [264, 318], L = [418, 318];
-const DECK = [
-  { size: P, a: [285, 127], b: [569, 269], c: [612, 332] },
-  { size: P, a: [971, 147], b: [798, 305], c: [612, 332] },
-  { size: L, a: [457, 324], b: [470, 332], c: [547, 332] },
-  { size: L, a: [1133, -32], b: [685, 305], c: [547, 332] },
-  { size: L, a: [1063, 808], b: [589, 376], c: [547, 332] },
-  { size: L, a: [-97, 710], b: [457, 362], c: [547, 332] },
-  { size: P, a: [701, 878], b: [666, 376], c: [636, 332] },
-];
-const FULL = [-80, -62, 1696, 1106];  // the full-screen rectangle of the last frame
+/* "VIEW ALL MY WORK" trails the cursor with a little lag (drag) */
+function setupGoFollow() {
+  const go = document.getElementById('go');
+  if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+  let x = 0, y = 0, px = 0, py = 0, started = false;
+  addEventListener('pointermove', (e) => {
+    x = e.clientX; y = e.clientY;
+    if (!started) { started = true; px = x; py = y; go.classList.add('is-following'); requestAnimationFrame(tick); }
+    // step aside over the nav, caption and dots so they stay clickable and readable
+    go.classList.toggle('is-away', !!e.target.closest('.bar, .slide-cap, .dots'));
+  }, { passive: true });
+  const tick = () => {
+    px += (x - px) * 0.16;
+    py += (y - py) * 0.16;
+    go.style.transform = `translate(${(px + 18).toFixed(1)}px, ${(py + 14).toFixed(1)}px)`;
+    requestAnimationFrame(tick);
+  };
+}
 
+/* ============ Screen-wave particles (WebGL) ============
+   The current work is drawn on a canvas. Moving the mouse breaks the picture into
+   particles coloured from the image: they are dragged along the mouse's path, ripples
+   ring outwards from it, and everything settles back into the picture after ~1s.
+   Changing slide sends one ripple from the centre while the pictures cross-fade. */
+function createFx(canvas) {
+  const gl = canvas.getContext('webgl', { antialias: false, premultipliedAlpha: false, alpha: false });
+  if (!gl || gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS) < 2) return null;
+
+  const N = 20;  // remembered mouse samples
+  const field = `
+    uniform vec4 uA[${N}];   // x, y, direction x, direction y (CSS px)
+    uniform vec2 uB[${N}];   // strength, age (s)
+    void wave(vec2 p, out vec2 drag, out vec2 push, out float f) {
+      drag = vec2(0.0); push = vec2(0.0); f = 0.0;
+      for (int i = 0; i < ${N}; i++) {
+        float s = uB[i].x;
+        if (s < 0.002) continue;
+        vec2 d = p - uA[i].xy;
+        float dist = length(d);
+        float g = exp(-dist * dist / 12100.0);                       // soft blob around the sample
+        float ring = 50.0 + uB[i].y * 560.0;                          // ripple radius grows with age
+        float w = exp(-pow((dist - ring) / 38.0, 2.0));               // the ripple band
+        vec2 n = d / (dist + 1.0);
+        drag += uA[i].zw * g * s;
+        push += n * (w * s + g * s * 0.6);
+        f += g * s + w * s * 0.55;
+      }
+    }
+    vec2 cover(vec2 uv, float ia, vec2 res) {
+      float sa = res.x / res.y;
+      vec2 r = sa > ia ? vec2(1.0, ia / sa) : vec2(sa / ia, 1.0);
+      return (uv - 0.5) * r + 0.5;
+    }
+    vec3 picture(vec2 p, vec2 res, sampler2D t0, sampler2D t1, vec2 asp, float mixv) {
+      vec2 uv = vec2(p.x / res.x, 1.0 - p.y / res.y);
+      vec3 a = texture2D(t0, cover(uv, asp.x, res)).rgb;
+      vec3 b = texture2D(t1, cover(uv, asp.y, res)).rgb;
+      return mix(a, b, mixv);
+    }`;
+  const head = `
+    #ifdef GL_FRAGMENT_PRECISION_HIGH
+    precision highp float;
+    #else
+    precision mediump float;
+    #endif
+    uniform vec2 uRes; uniform vec2 uShift; uniform sampler2D uT0, uT1; uniform vec2 uAsp; uniform float uMix;`;
+
+  // the picture, with a ripple warp and darkened where it has broken into particles
+  const quadVS = `attribute vec2 aQ; varying vec2 vUv; void main() { vUv = aQ * 0.5 + 0.5; gl_Position = vec4(aQ, 0.0, 1.0); }`;
+  const quadFS = `${head}${field}
+    varying vec2 vUv;
+    void main() {
+      vec2 p = vec2(vUv.x, 1.0 - vUv.y) * uRes;
+      vec2 drag, push; float f;
+      wave(p, drag, push, f);
+      vec2 q = p - push * 9.0 - drag * 10.0 - uShift;
+      vec3 c = picture(q, uRes, uT0, uT1, uAsp, uMix);
+      float hole = smoothstep(0.2, 0.95, f);
+      gl_FragColor = vec4(c * (1.0 - hole * 0.55), 1.0);
+    }`;
+  // the particles: one per grid cell, coloured from where they started
+  const ptsVS = `${head}${field}
+    attribute vec2 aPos;
+    uniform float uDpr;
+    varying vec3 vCol; varying float vA;
+    float hash(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
+    void main() {
+      vec2 drag, push; float f;
+      wave(aPos, drag, push, f);
+      float h = hash(aPos);
+      vec2 scatter = (vec2(hash(aPos + 1.7), hash(aPos + 9.2)) - 0.5) * f * 46.0;
+      vec2 p = aPos + drag * 78.0 + push * 24.0 + scatter - uShift;
+      vCol = picture(aPos - uShift, uRes, uT0, uT1, uAsp, uMix) * (1.0 + min(f, 1.0) * 0.5);
+      vA = smoothstep(0.05, 0.35, f) * (0.5 + 0.5 * h);
+      gl_PointSize = (1.4 + min(f, 1.6) * 1.3) * uDpr;
+      gl_Position = vec4(p.x / uRes.x * 2.0 - 1.0, 1.0 - p.y / uRes.y * 2.0, 0.0, 1.0);
+    }`;
+  const ptsFS = `precision mediump float; varying vec3 vCol; varying float vA;
+    void main() {
+      float r = length(gl_PointCoord - 0.5);
+      if (r > 0.5 || vA < 0.01) discard;
+      gl_FragColor = vec4(vCol, vA * (1.0 - smoothstep(0.25, 0.5, r)));
+    }`;
+
+  const compile = (type, src) => {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+    return s;
+  };
+  const program = (vs, fs) => {
+    const p = gl.createProgram();
+    gl.attachShader(p, compile(gl.VERTEX_SHADER, vs));
+    gl.attachShader(p, compile(gl.FRAGMENT_SHADER, fs));
+    gl.linkProgram(p);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+    return p;
+  };
+  let quadP, ptsP;
+  try { quadP = program(quadVS, quadFS); ptsP = program(ptsVS, ptsFS); } catch (e) { console.warn('fx off:', e.message); return null; }
+
+  const quadBuf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, quadBuf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+  const ptsBuf = gl.createBuffer();
+  let ptsCount = 0;
+
+  const makeTex = () => {
+    const t = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, t);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 255]));
+    return t;
+  };
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+  // two slots: the picture going away (0) and the one arriving (1)
+  const slots = [{ tex: makeTex(), src: null, asp: 1 }, { tex: makeTex(), src: null, asp: 1 }];
+  let mixv = 1, mixFrom = 0;
+  const upload = (slot) => {
+    const s = slot.src;
+    if (!s) return;
+    const v = s.video;
+    const useVideo = v && v.readyState >= 2 && v.videoWidth;
+    const el = useVideo ? v : s.img;
+    if (!useVideo) {
+      if (!el.complete || !el.naturalWidth) return;
+      if (slot.uploaded === el) return;  // still images upload once
+    }
+    gl.bindTexture(gl.TEXTURE_2D, slot.tex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, el);
+    slot.asp = useVideo ? v.videoWidth / v.videoHeight : el.naturalWidth / el.naturalHeight;
+    slot.uploaded = useVideo ? null : el;
+  };
+
+  let W = 0, H = 0, dpr = 1;
+  const resize = () => {
+    dpr = Math.min(devicePixelRatio || 1, 1.5);
+    W = innerWidth; H = innerHeight;
+    canvas.width = Math.round(W * dpr);
+    canvas.height = Math.round(H * dpr);
+    const step = W < 700 ? 5 : 4;
+    const pts = [];
+    for (let y = step / 2; y < H; y += step) for (let x = step / 2; x < W; x += step) pts.push(x, y);
+    gl.bindBuffer(gl.ARRAY_BUFFER, ptsBuf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(pts), gl.STATIC_DRAW);
+    ptsCount = pts.length / 2;
+  };
+  resize();
+  addEventListener('resize', resize);
+
+  // mouse trail: every frame the mouse moved adds a sample that fades over ~1s
+  const trail = [];
+  let mx = -1, my = -1, lx = -1, ly = -1, sx = 0, sy = 0;
+  addEventListener('pointermove', (e) => { mx = e.clientX; my = e.clientY; }, { passive: true });
+  const push = (x, y, dx, dy, s) => {
+    trail.push({ x, y, dx, dy, s, t: performance.now() });
+    if (trail.length > N) trail.shift();
+  };
+  const A = new Float32Array(N * 4), B = new Float32Array(N * 2);
+
+  const uni = (p) => {
+    const get = (n) => gl.getUniformLocation(p, n);
+    return { res: get('uRes'), shift: get('uShift'), t0: get('uT0'), t1: get('uT1'), asp: get('uAsp'), mix: get('uMix'), a: get('uA'), b: get('uB'), dpr: get('uDpr') };
+  };
+  const uq = uni(quadP), up = uni(ptsP);
+  const setCommon = (u) => {
+    gl.uniform2f(u.res, W, H);
+    gl.uniform2f(u.shift, sx, sy);
+    gl.uniform1i(u.t0, 0);
+    gl.uniform1i(u.t1, 1);
+    gl.uniform2f(u.asp, slots[0].asp, slots[1].asp);
+    gl.uniform1f(u.mix, mixv);
+    gl.uniform4fv(u.a, A);
+    gl.uniform2fv(u.b, B);
+  };
+
+  const frame = (now) => {
+    // new sample when the mouse moved
+    if (mx >= 0 && lx >= 0) {
+      const dx = mx - lx, dy = my - ly, sp = Math.hypot(dx, dy);
+      if (sp > 0.6) push(mx, my, dx / sp, dy / sp, Math.min(1.5, sp / 16));
+    }
+    lx = mx; ly = my;
+    // the whole picture leans a touch towards the mouse, with lag (the "drag")
+    if (mx >= 0) {
+      sx += ((mx - W / 2) * -0.012 - sx) * 0.05;
+      sy += ((my - H / 2) * -0.012 - sy) * 0.05;
+    }
+    for (let i = 0; i < N; i++) {
+      const s = trail[i];
+      if (!s) { B[i * 2] = 0; continue; }
+      const age = (now - s.t) / 1000;
+      A.set([s.x, s.y, s.dx, s.dy], i * 4);
+      B[i * 2] = s.s * Math.exp(-age / 0.75);
+      B[i * 2 + 1] = age;
+    }
+    if (mixv < 1) mixv = Math.min(1, (now - mixFrom) / 1100);
+    upload(slots[1]);
+    if (mixv < 1) upload(slots[0]);
+
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, slots[0].tex);
+    gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, slots[1].tex);
+
+    gl.disable(gl.BLEND);
+    gl.useProgram(quadP);
+    setCommon(uq);
+    gl.bindBuffer(gl.ARRAY_BUFFER, quadBuf);
+    const aq = gl.getAttribLocation(quadP, 'aQ');
+    gl.enableVertexAttribArray(aq);
+    gl.vertexAttribPointer(aq, 2, gl.FLOAT, false, 0, 0);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    gl.disableVertexAttribArray(aq);
+
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    gl.useProgram(ptsP);
+    setCommon(up);
+    gl.uniform1f(up.dpr, dpr);
+    gl.bindBuffer(gl.ARRAY_BUFFER, ptsBuf);
+    const ap = gl.getAttribLocation(ptsP, 'aPos');
+    gl.enableVertexAttribArray(ap);
+    gl.vertexAttribPointer(ap, 2, gl.FLOAT, false, 0, 0);
+    gl.drawArrays(gl.POINTS, 0, ptsCount);
+    gl.disableVertexAttribArray(ap);
+    requestAnimationFrame(frame);
+  };
+  requestAnimationFrame(frame);
+
+  return {
+    // cross-fade to a new slide and send a ripple out from the centre
+    setSlide(src, animate) {
+      const [a, b] = slots;
+      slots[0] = b; slots[1] = a;   // the arriving picture takes the other slot
+      slots[1].src = src;
+      slots[1].uploaded = null;
+      upload(slots[1]);
+      mixv = animate ? 0 : 1;
+      mixFrom = performance.now();
+      if (animate) push(W / 2, H / 2, 0, 0, 1.3);
+    },
+  };
+}
+
+/* ============ Begin animation ============
+   Works fly in from outside the screen and pile into one rectangle, which turns grey;
+   the grey rectangle grows to full screen while the first work fades in. Under 3s. */
 async function playIntro(intro) {
-  const stage = document.getElementById('intro-stage');
-  const fit = () => stage.style.setProperty('--s', Math.max(innerWidth / 1512, innerHeight / 982));
-  fit();
-  addEventListener('resize', fit);
+  const W = innerWidth, H = innerHeight;
+  const cw = Math.min(W * 0.36, 480), ch = cw * 0.7;
+  const cx = W / 2, cy = H * 0.47;
+  const x0 = cx - cw / 2, y0 = cy - ch / 2;
+  const first = bySlug(SLIDES[0]);
+  const pool = (INTRO_DECK && INTRO_DECK.length ? INTRO_DECK : PROJECTS.map((p) => p.slug))
+    .filter((s) => s !== SLIDES[0]).map(bySlug).filter(Boolean);
 
-  const cards = DECK.map((d, i) => {
-    const p = bySlug(INTRO_DECK[i]);
+  const cards = pool.slice(0, 16).map((p) => {
     const el = document.createElement('div');
     el.className = 'deck-card';
-    Object.assign(el.style, { left: `${d.a[0]}px`, top: `${d.a[1]}px`, width: `${d.size[0]}px`, height: `${d.size[1]}px`, opacity: 0 });
-    el.innerHTML = p ? `<img src="${coverSrc(p)}" alt="" decoding="async">` : '';
-    stage.append(el);
+    Object.assign(el.style, { width: `${cw}px`, height: `${ch}px` });
+    el.innerHTML = `<img src="${coverSrc(p)}" alt="" decoding="async">`;
+    intro.append(el);
     return el;
   });
-  // the growing card shows the first slide, so the hand-off to the page is seamless
-  const first = bySlug(SLIDES[0]);
-  if (first) cards[6].innerHTML = `<img src="${coverSrc(first)}" alt="" decoding="async">`;
+  const block = document.createElement('div');
+  block.className = 'deck-block';
+  Object.assign(block.style, { left: `${x0}px`, top: `${y0}px`, width: `${cw}px`, height: `${ch}px` });
+  block.innerHTML = first ? `<img src="${coverSrc(first)}" alt="">` : '';
+  intro.append(block);
+  const text = document.getElementById('intro-text');
+  text.style.top = `${y0 + ch + 22}px`;
 
   let done = false;
   const finish = () => {
@@ -139,60 +435,47 @@ async function playIntro(intro) {
     done = true;
     intro.classList.add('is-leaving');
     document.body.classList.remove('intro-on');
-    document.body.style.overflow = '';
-    setTimeout(() => intro.classList.add('is-gone'), 550);
+    setTimeout(() => intro.classList.add('is-gone'), 320);
   };
   intro.addEventListener('click', finish);
   addEventListener('keydown', finish, { once: true });
-  document.body.style.overflow = 'hidden';
 
-  // give the covers a moment to arrive (never more than 1.2s)
-  await Promise.race([Promise.all(cards.map((c) => c.querySelector('img')?.decode?.().catch(() => {}))), wait(1200)]);
+  // give the covers a moment (never more than 0.25s)
+  await Promise.race([Promise.all(cards.map((c) => c.querySelector('img').decode().catch(() => {}))), wait(250)]);
   if (done) return;
 
-  const move = (el, from, to, opts) => el.animate(
-    [{ transform: `translate(${from[0]}px, ${from[1]}px)` }, { transform: `translate(${to[0]}px, ${to[1]}px)` }],
-    { fill: 'forwards', ...opts });
-
-  // A: cards pop in where they lie scattered
-  cards.forEach((el, i) => el.animate(
-    [{ opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1 }],
-    { duration: 520, delay: i * 70, easing: 'cubic-bezier(.34, 1.4, .64, 1)', fill: 'forwards' }));
-  await wait(900);
-  if (done) return;
-
-  // A → B: gather towards the middle
+  // 1. fly in from every side and pile up, each a little off-square
+  const far = Math.hypot(W, H) * 0.62 + cw;
   cards.forEach((el, i) => {
-    const d = DECK[i];
-    move(el, [0, 0], [d.b[0] - d.a[0], d.b[1] - d.a[1]], { duration: 650, delay: i * 25, easing: 'cubic-bezier(.65, 0, .35, 1)' });
+    const ang = (i / cards.length) * Math.PI * 2 + Math.random() * 0.6;
+    const sx = cx + Math.cos(ang) * far - cw / 2, sy = cy + Math.sin(ang) * far - ch / 2;
+    const ex = x0 + (Math.random() - 0.5) * 22, ey = y0 + (Math.random() - 0.5) * 16;
+    const r0 = (Math.random() - 0.5) * 70, r1 = (Math.random() - 0.5) * 6;
+    el.animate(
+      [{ transform: `translate(${sx}px, ${sy}px) rotate(${r0}deg)` }, { transform: `translate(${ex}px, ${ey}px) rotate(${r1}deg)` }],
+      { duration: 600, delay: i * 30, easing: 'cubic-bezier(.16, 1, .3, 1)', fill: 'forwards' });
   });
-  await wait(780);
+  await wait(cards.length * 30 + 600);
   if (done) return;
 
-  // B → C: square up into one stack
-  cards.forEach((el, i) => {
-    const d = DECK[i];
-    move(el, [d.b[0] - d.a[0], d.b[1] - d.a[1]], [d.c[0] - d.a[0], d.c[1] - d.a[1]], { duration: 480, easing: 'cubic-bezier(.65, 0, .35, 1)' });
-  });
-  await wait(560);
+  // 2. the pile becomes one grey rectangle, with the line of text under it
+  block.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 220, easing: 'ease-out', fill: 'forwards' });
+  text.classList.add('is-on');
+  await wait(340);
   if (done) return;
+  cards.forEach((el) => el.remove());
 
-  // the top card slips behind the stack and grows to full screen; the stack falls away
-  const top = cards[6];
-  const d = DECK[6];
-  top.getAnimations().forEach((a) => a.cancel());
-  Object.assign(top.style, { left: `${d.c[0]}px`, top: `${d.c[1]}px`, opacity: 1, zIndex: 0 });
-  cards.slice(0, 6).forEach((el) => { el.style.zIndex = 1; });
-  top.animate(
+  // 3. it grows to full screen while the first work fades in
+  const dur = 650, ease = 'cubic-bezier(.76, 0, .24, 1)';
+  block.animate(
     [
-      { left: `${d.c[0]}px`, top: `${d.c[1]}px`, width: `${d.size[0]}px`, height: `${d.size[1]}px`, borderRadius: '8px' },
-      { left: `${FULL[0]}px`, top: `${FULL[1]}px`, width: `${FULL[2]}px`, height: `${FULL[3]}px`, borderRadius: '0px' },
+      { left: `${x0}px`, top: `${y0}px`, width: `${cw}px`, height: `${ch}px`, borderRadius: '8px' },
+      { left: '0px', top: '0px', width: `${W}px`, height: `${H}px`, borderRadius: '0px' },
     ],
-    { duration: 780, easing: 'cubic-bezier(.76, 0, .24, 1)', fill: 'forwards' });
-  cards.slice(0, 6).forEach((el, i) => el.animate(
-    [{ opacity: 1, scale: 1 }, { opacity: 0, scale: 0.72 }],
-    { duration: 420, delay: 180 + i * 30, easing: 'cubic-bezier(.65, 0, .35, 1)', fill: 'forwards' }));
-  await wait(820);
+    { duration: dur, easing: ease, fill: 'forwards' });
+  block.querySelector('img')?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: dur, easing: 'ease-in', fill: 'forwards' });
+  text.classList.remove('is-on');
+  await wait(dur);
   finish();
 }
 
@@ -276,8 +559,7 @@ function renderProject(root) {
 }
 
 /* ============ Boot ============ */
-const slidesRoot = document.getElementById('slides');
-if (slidesRoot) renderSlides(slidesRoot);
+if (document.getElementById('stage')) setupHome();
 const cardsRoot = document.getElementById('cards');
 if (cardsRoot) renderCards(cardsRoot);
 const projectRoot = document.getElementById('project');

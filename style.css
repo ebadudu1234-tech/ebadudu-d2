@@ -83,17 +83,23 @@ img, video { display: block; max-width: 100%; }
 .links a:hover, .links a[aria-current="page"] { opacity: 1; font-weight: 700; }
 .logo:hover { background: rgba(255, 255, 255, .68); }
 
-/* ============ Home: full-screen slides ============ */
-html:has(body.home) { scroll-snap-type: y mandatory; }
-.slide {
-  position: relative;
-  height: 100vh;
-  height: 100svh;
+/* ============ Home: one full-screen stage, no scrolling ============ */
+body.home { height: 100vh; height: 100svh; overflow: hidden; }
+.stage {
+  position: fixed;
+  inset: 0;
   overflow: hidden;
-  scroll-snap-align: start;
-  background: #111;
+  background: #000;
+  cursor: pointer;
 }
-.slide-media img, .slide-media video {
+.slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 1.1s ease;
+}
+.slide.is-on { opacity: 1; }
+.slide img, .slide video {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -101,25 +107,27 @@ html:has(body.home) { scroll-snap-type: y mandatory; }
   max-width: none;
   object-fit: cover;
 }
-.slide-media.contain img { object-fit: contain; }
-/* each slide eases in a little as it arrives */
-.slide-media { position: absolute; inset: 0; scale: 1.06; transition: scale 1.6s var(--settle); }
-.slide.is-on .slide-media { scale: 1; }
+.slide video { opacity: 0; transition: opacity .5s; }
+.slide.is-playing video { opacity: 1; }
+/* when WebGL is running the canvas draws the picture; the DOM media only feed it */
+.fx { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+body.fx-on .slides { visibility: hidden; }
+body:not(.fx-on) .fx { display: none; }
+
 .slide-cap {
-  position: absolute;
+  position: fixed;
   left: var(--left);
   bottom: var(--top);
+  z-index: 30;
   display: flex;
   align-items: center;
   gap: 14px;
   height: clamp(40px, calc(50 * var(--u)), 50px);
   padding: 0 22px;
   font-size: clamp(15px, calc(18 * var(--u)), 18px);
-  opacity: 0;
-  translate: 0 16px;
-  transition: opacity .6s ease .25s, translate .8s var(--settle) .25s;
+  transition: opacity .5s ease, translate .7s var(--settle);
 }
-.slide.is-on .slide-cap { opacity: 1; translate: none; }
+.slide-cap.swap { opacity: 0; translate: 0 10px; }
 .slide-cap b { font-weight: 700; }
 .slide-cap span { opacity: .8; }
 
@@ -134,9 +142,11 @@ html:has(body.home) { scroll-snap-type: y mandatory; }
   translate: 0 -50%;
 }
 .dots button {
+  position: relative;
   width: 8px;
   height: 8px;
   padding: 0;
+  overflow: hidden;
   border: 0;
   border-radius: 4px;
   background: rgba(255, 255, 255, .7);
@@ -146,13 +156,23 @@ html:has(body.home) { scroll-snap-type: y mandatory; }
   transition: height .45s var(--bounce), background .3s;
 }
 .dots button:hover { background: #fff; }
-.dots button[aria-current="true"] { height: 22px; background: #fff; }
+.dots button[aria-current="true"] { height: 30px; background: rgba(255, 255, 255, .45); }
+/* the active dot fills up while its work is on screen */
+.dots button[aria-current="true"]::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  transform-origin: top;
+  animation: fill var(--slide-ms, 6000ms) linear forwards;
+}
+@keyframes fill { from { transform: scaleY(0); } to { transform: scaleY(1); } }
 
-/* "VIEW ALL MY WORK" (Figma: 201×50 at 850, 566) */
+/* "VIEW ALL MY WORK": trails the cursor everywhere on the home page */
 .go {
   position: fixed;
-  left: calc(850 * var(--u));
-  top: calc(566 / 982 * 100svh);
+  left: 0;
+  top: 0;
   z-index: 30;
   display: inline-flex;
   align-items: center;
@@ -160,10 +180,14 @@ html:has(body.home) { scroll-snap-type: y mandatory; }
   width: clamp(170px, calc(201 * var(--u)), 201px);
   height: clamp(42px, calc(50 * var(--u)), 50px);
   font-size: clamp(15px, calc(18 * var(--u)), 18px);
-  transition: background .3s, translate .45s var(--bounce), opacity .6s;
+  pointer-events: none;
+  will-change: transform;
+  transition: background .3s, opacity .6s, scale .4s var(--bounce);
 }
-.go:hover { background: var(--green-hot); translate: 0 -3px; }
-body.intro-on .dots, body.intro-on .go { opacity: 0; pointer-events: none; }
+/* before the mouse has moved it waits at the Figma spot (850, 566) */
+.go:not(.is-following) { left: calc(850 * var(--u)); top: calc(566 / 982 * 100svh); }
+.go.is-away { opacity: 0; }
+body.intro-on .dots, body.intro-on .go, body.intro-on .slide-cap { opacity: 0; pointer-events: none; }
 .dots { transition: opacity .6s; }
 
 /* ============ Begin animation ============ */
@@ -174,27 +198,43 @@ body.intro-on .dots, body.intro-on .go { opacity: 0; pointer-events: none; }
   overflow: hidden;
   background: var(--bg);
   cursor: pointer;
-  transition: opacity .5s ease;
+  transition: opacity .3s ease;
 }
 .intro.is-leaving { opacity: 0; pointer-events: none; }
 .intro.is-gone { display: none; }
-/* the 1512×982 Figma frame, scaled to cover the screen */
-.intro-stage {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 1512px;
-  height: 982px;
-  transform: translate(-50%, -50%) scale(var(--s, 1));
-}
 .deck-card {
+  position: absolute;
+  left: 0;
+  top: 0;
+  overflow: hidden;
+  border-radius: 8px;
+  background: var(--block);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, .5);
+  will-change: transform;
+}
+.deck-card img { width: 100%; height: 100%; max-width: none; object-fit: cover; }
+/* the grey rectangle the works merge into; it grows into the first work */
+.deck-block {
   position: absolute;
   overflow: hidden;
   border-radius: 8px;
   background: var(--block);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, .45);
+  opacity: 0;
 }
-.deck-card img { width: 100%; height: 100%; max-width: none; object-fit: cover; }
+.deck-block img { width: 100%; height: 100%; max-width: none; object-fit: cover; opacity: 0; }
+.intro-text {
+  position: absolute;
+  left: 50%;
+  margin: 0;
+  font-weight: 700;
+  font-size: clamp(14px, calc(18 * var(--u)), 18px);
+  letter-spacing: .08em;
+  white-space: nowrap;
+  opacity: 0;
+  translate: -50% 8px;
+  transition: opacity .25s ease, translate .4s var(--settle);
+}
+.intro-text.is-on { opacity: 1; translate: -50% 0; }
 .skip {
   position: absolute;
   right: var(--right);
@@ -416,11 +456,15 @@ body.intro-on .dots, body.intro-on .go { opacity: 0; pointer-events: none; }
   .cards { grid-template-columns: 1fr; padding-top: 84px; }
   .card { cursor: pointer; }
   .card-title { opacity: 1; translate: none; }
-  .go { left: 50%; translate: -50% 0; top: auto; bottom: 84px; }
-  .go:hover { translate: -50% -3px; }
+  .slide-cap { bottom: calc(var(--top) + 64px); }
   .p-intro { grid-template-columns: 1fr; gap: 10px; }
   .p-row { flex-direction: column; }
   .p-row figure { flex: none; }
   .p-next { cursor: pointer; }
 }
-@media (hover: none) { .follow { display: none; } .card, .p-next { cursor: pointer; } }
+@media (hover: none) {
+  .follow { display: none; }
+  .card, .p-next { cursor: pointer; }
+  /* no mouse to follow: the button sits at the bottom, centred, and can be tapped */
+  .go, .go:not(.is-following) { left: 50%; top: auto; bottom: var(--top); translate: -50% 0; pointer-events: auto; }
+}

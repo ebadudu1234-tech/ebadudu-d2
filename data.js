@@ -110,6 +110,6 @@ const PROJECTS = [
    begin animation. Picks: the newest work with the most photos. */
 const SLIDES = ['after-dada', 'switchback', 'code-for-fun', '550-cafe', 'sonar', 'under-the-cyber-skin'];
 
-/* Begin animation: 7 cards scatter, gather and stack (Figma "begin animation" frames).
-   The last one ends on top and grows into the first slide. */
-const INTRO_DECK = ['planting-pen', 'dada-newspaper', 'yiwugo', 'ungreen-shop', 'game-zine', 'toyukukoku', 'after-dada'];
+/* Begin animation: works fly in from outside and pile into a grey rectangle, which
+   grows into the first slide. null = use every work (up to 16 cards); or list slugs. */
+const INTRO_DECK = null;

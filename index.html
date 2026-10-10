@@ -20,17 +20,22 @@
   </nav>
 </header>
 
-<!-- Begin animation: cards scatter → gather → stack → the first work fills the screen -->
+<!-- Begin animation: works fly in from outside → stack into one rectangle → it grows into the first work -->
 <div class="intro" id="intro" aria-hidden="true">
-  <div class="intro-stage" id="intro-stage"></div>
+  <p class="intro-text" id="intro-text">ZIHE WANG · SELECTED WORKS</p>
   <span class="skip">click to skip</span>
 </div>
 
-<!-- full-screen slides, one per work -->
-<main class="slides" id="slides"></main>
+<!-- the home page does not scroll: one full-screen stage, works play one after another -->
+<main class="stage" id="stage">
+  <div class="slides" id="slides"></div>
+  <!-- the picture is redrawn here; moving the mouse breaks it into waving particles -->
+  <canvas class="fx" id="fx" aria-hidden="true"></canvas>
+</main>
 
-<nav class="dots" id="dots" aria-label="Slides"></nav>
-<a class="go glass-green" href="work.html">VIEW ALL MY WORK</a>
+<a class="slide-cap glass" id="cap" href="#"><b></b><span></span></a>
+<nav class="dots" id="dots" aria-label="Works"></nav>
+<a class="go glass-green" id="go" href="work.html">VIEW ALL MY WORK</a>
 
 <script src="media.js"></script>
 <script src="data.js"></script>
