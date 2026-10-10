@@ -251,9 +251,11 @@ const MEDIA = {
     { src: 'assets/work/nuclear-tide/05.jpg', w: 3840, h: 2160 },
   ],
   'restaurant': [
-    { src: 'assets/work/restaurant/01.jpg', w: 1465, h: 1010 },
+    { src: 'assets/work/restaurant/01.jpg', w: 2400, h: 1800 },
     { src: 'assets/work/restaurant/02.jpg', w: 2400, h: 943 },
-    { src: 'assets/work/restaurant/03.jpg', w: 1615, h: 1089 },
-    { src: 'assets/work/restaurant/04.jpg', w: 1414, h: 967 },
+    { src: 'assets/work/restaurant/03.jpg', w: 2400, h: 1800 },
+    { src: 'assets/work/restaurant/04.jpg', w: 2400, h: 1800 },
+    { src: 'assets/work/restaurant/05.jpg', w: 2400, h: 1800 },
+    { src: 'assets/work/restaurant/06.jpg', w: 2400, h: 1800 },
   ],
 };
