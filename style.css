@@ -372,7 +372,8 @@ body.intro-on .dots, body.intro-on .go, body.intro-on .slide-cap { opacity: 0; p
 .p-cover .media { position: absolute; inset: 0; scale: 1.08; transition: scale 2s var(--settle); }
 .p-cover.is-in .media { scale: 1; }
 .p-cover.contain .media img { object-fit: contain; }
-/* About: the cover is a map of every work, dimmed, each one a landmark (cards' 8px / 9px) */
+/* About: the cover is a map of every work, dimmed, each one a landmark (cards' 8px / 9px);
+   the one nearest the mouse lights up and a glass pin names it */
 .a-map {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -380,7 +381,77 @@ body.intro-on .dots, body.intro-on .go, body.intro-on .slide-cap { opacity: 0; p
   gap: max(8px, calc(9 * var(--u)));
   padding: max(8px, calc(9 * var(--u)));
 }
-.p-cover .a-map img { position: static; border-radius: 8px; filter: brightness(.42); }
+.a-map a { display: block; overflow: hidden; border-radius: 8px; }
+.p-cover .a-map img { position: static; filter: brightness(.42); transition: filter .4s ease, scale .8s var(--settle); }
+.a-map a.is-near img { filter: brightness(.95); scale: 1.04; }
+.ab-cover .p-head { pointer-events: none; }
+.ab-pin {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 3;
+  padding: 6px 12px;
+  font-weight: 700;
+  font-size: 14px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s ease, transform .5s var(--settle);
+}
+.ab-pin.is-on { opacity: 1; }
+/* the route: a "you are here" rail beside one paragraph per screen */
+.ab-route {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  gap: 32px;
+  padding: 0 var(--right) 0 var(--left);
+}
+.ab-rail {
+  position: sticky;
+  top: 45vh;
+  align-self: start;
+  display: grid;
+  gap: 28px;
+  margin: clamp(56px, calc(110 * var(--u)), 110px) 0 0;
+  padding: 0;
+  list-style: none;
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--dim);
+}
+.ab-rail::before { content: ''; position: absolute; left: 5.5px; top: 8px; bottom: 8px; width: 1px; background: rgba(255, 255, 255, .25); }
+.ab-rail li { position: relative; display: flex; align-items: center; gap: 14px; transition: color .3s; }
+.ab-dot {
+  width: 12px;
+  height: 12px;
+  border: 1px solid rgba(255, 255, 255, .6);
+  border-radius: 50%;
+  background: var(--bg);
+  transition: background .3s, border-color .3s, scale .4s var(--bounce);
+}
+.ab-rail li.is-past, .ab-rail li.is-here { color: var(--ink); }
+.ab-rail li.is-past .ab-dot { background: var(--ink); }
+.ab-rail li.is-here .ab-dot { background: var(--green-hot); border-color: transparent; scale: 1.4; }
+.ab-rail li.is-here::after {
+  content: 'YOU ARE HERE';
+  padding: 4px 12px;
+  border-radius: 25px;
+  background: var(--green);
+  -webkit-backdrop-filter: blur(8.8px);
+  backdrop-filter: blur(8.8px);
+  font-size: 13px;
+}
+.ab-steps { padding-top: clamp(56px, calc(110 * var(--u)), 110px); }
+.ab-step { min-height: 72vh; padding-bottom: clamp(40px, 8vh, 90px); }
+.ab-text {
+  max-width: 24em;
+  margin: 12px 0 0;
+  font-size: clamp(26px, calc(44 * var(--u)), 44px);
+  line-height: 1.25;
+}
+.ab-w { color: rgba(255, 255, 255, .2); transition: color .35s ease; }
+.ab-w.is-lit { color: var(--ink); }
+@media (prefers-reduced-motion: reduce) { .ab-w { transition: none; } }
 .a-mail { background: linear-gradient(currentColor, currentColor) 0 100% / 0 1px no-repeat; transition: background-size .5s var(--settle); }
 .a-mail:hover { background-size: 100% 1px; }
 .p-cover::after {
@@ -509,6 +580,9 @@ body.intro-on .dots, body.intro-on .go, body.intro-on .slide-cap { opacity: 0; p
   .slide-cap { bottom: calc(var(--top) + 64px); }
   .p-intro { grid-template-columns: 1fr; gap: 10px; }
   .a-map { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .ab-route { grid-template-columns: 1fr; }
+  .ab-rail { display: none; }
+  .ab-step { min-height: 0; }
   .p-row { flex-direction: column; }
   .p-row figure { flex: none; }
   .p-next { cursor: pointer; }

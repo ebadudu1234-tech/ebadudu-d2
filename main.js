@@ -1049,11 +1049,65 @@ function playSequence(el, hold = 1500) {
 /* ============ About Me ============ */
 function setupAbout(root) {
   const list = [...PROJECTS].sort((a, b) => b.year - a.year);
-  // the cover: every work as a small landmark on one dimmed map
-  root.querySelector('#a-map').innerHTML = list.map((p) => `<img src="${thumbSrc(p)}" alt="" decoding="async">`).join('');
+  const cover = root.querySelector('.ab-cover');
+
+  // the cover: every work is a landmark on one dimmed map; the one nearest the mouse
+  // lights up and shows its name, and opens its work
+  const map = root.querySelector('#a-map');
+  map.innerHTML = list.map((p) => `<a href="${projectUrl(p)}" data-title="${esc(p.title)}"><img src="${thumbSrc(p)}" alt="${esc(p.title)}" decoding="async"></a>`).join('');
+  const pin = root.querySelector('#ab-pin');
+  const tiles = [...map.children];
+  let near = null;
+  if (!TOUCH) {
+    cover.addEventListener('pointermove', (e) => {
+      let best = null, bestD = Infinity;
+      tiles.forEach((t) => {
+        const r = t.getBoundingClientRect();
+        const d = Math.hypot(e.clientX - (r.left + r.width / 2), e.clientY - (r.top + r.height / 2));
+        if (d < bestD) { bestD = d; best = t; }
+      });
+      if (best === near) return;
+      near?.classList.remove('is-near');
+      near = best;
+      near.classList.add('is-near');
+      const r = near.getBoundingClientRect(), c = cover.getBoundingClientRect();
+      pin.textContent = near.dataset.title;
+      pin.style.transform = `translate(${r.left - c.left + 12}px, ${r.top - c.top + 12}px)`;
+      pin.classList.add('is-on');
+    });
+    cover.addEventListener('pointerleave', () => { near?.classList.remove('is-near'); near = null; pin.classList.remove('is-on'); });
+  }
+
+  // the route: words go from dim to white as you read down; the rail marks where you are
+  const texts = [...root.querySelectorAll('[data-reveal-words]')];
+  texts.forEach((p) => {
+    p.innerHTML = p.textContent.split(/(\s+)/).map((w) => (/^\s*$/.test(w) ? w : `<span class="ab-w">${esc(w)}</span>`)).join('');
+    p.__words = [...p.querySelectorAll('.ab-w')];
+  });
+  const steps = [...root.querySelectorAll('.ab-step')];
+  const stops = [...root.querySelectorAll('#ab-rail li')];
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let queued = false;
+  const walk = () => {
+    queued = false;
+    texts.forEach((p) => {
+      const r = p.getBoundingClientRect();
+      const t = still ? 1 : Math.min(1, Math.max(0, (innerHeight * 0.85 - r.top) / (r.height + innerHeight * 0.3)));
+      const n = Math.round(t * p.__words.length);
+      p.__words.forEach((w, i) => w.classList.toggle('is-lit', i < n));
+    });
+    // "you are here": the last step whose top has passed the middle of the screen
+    let here = -1;
+    steps.forEach((s, i) => { if (s.getBoundingClientRect().top < innerHeight * 0.55) here = i; });
+    stops.forEach((s, i) => { s.classList.toggle('is-here', i === here); s.classList.toggle('is-past', i < here); });
+  };
+  addEventListener('scroll', () => { if (!queued) { queued = true; requestAnimationFrame(walk); } }, { passive: true });
+  addEventListener('resize', walk);
+  walk();
+
   // the closing line leads on to the newest work
   root.querySelector('#a-next').src = coverSrc(list[0]);
-  requestAnimationFrame(() => root.querySelector('.p-cover').classList.add('is-in'));
+  requestAnimationFrame(() => cover.classList.add('is-in'));
   setupFollow('.p-next');
 }
 

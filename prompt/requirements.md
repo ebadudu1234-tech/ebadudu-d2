@@ -94,8 +94,10 @@
 
 ## 5E. ABOUT ME 页（about.html）
 - 文字来自 `about me\putin\About Me.txt`，**D2 用 Version 2「Let Me Guide You」**，原文照搬。
-- 按作品页的视觉系统排：全屏封面（所有作品缩略图排成一张变暗的"地图"，每个作品像一个地标）+ 左下角大写标题 LET ME GUIDE YOU、副标题 Zihe Wang、毛玻璃标签 VISUAL COMMUNICATION / INFORMATION DESIGN；下面是 "ABOUT ME" 文字区（第一段大字，其余灰色小字）和 "GET IN TOUCH" 邮箱；最后一句 "Let me guide you." 做成底部大图链接，鼠标碰到出现绿色 "VIEW MY WORK" 胶囊，点进 WORK。
-- 所有页面导航里的 ABOUT ME 都改成链接到 about.html。
+- **按 `prolilab/references` 里参考网站的做法重新做**（字体、颜色仍是 D2 自己的：黑底、Rokkitt、毛玻璃、绿色）：
+  - 封面是一张"地图"：所有作品缩略图变暗排成网格，每个作品是一个地标；**鼠标靠近哪个，哪个就亮起来，毛玻璃小标签写出作品名**，点击进入作品。标题 LET ME GUIDE YOU、Zihe Wang、两个标签在左下角。
+  - 文字是一条"路线"：四段文字每段约一屏，**往下滚时一个词一个词从暗变白**（参考 Ning Huang）；左边有一条固定的路线条 01–04，经过的点变白，当前的点变绿并显示 "YOU ARE HERE"（来自 statement-to-website.md 里"地标 / 你在这里"的想法）。手机上隐藏路线条，每段上面有 01 / 04 编号。
+  - GET IN TOUCH 邮箱；最后一句 "Let me guide you." 是底部大图链接，鼠标碰到出现绿色 "VIEW MY WORK"，点进 WORK。
 
 ## 6. 待办 / 待确认
 - [ ] PLAY AREA 页面还没有（Figma 里也没有）。ABOUT ME 已完成。
@@ -133,3 +135,4 @@
 | `219b836` | 新增 2023 作品 Chayang Old Street Renewal |
 | `ff31818` | 手机端：视频在屏幕上自动静音播放、不用点；首页粒子效果手指离开后恢复 |
 | `dd52c55` | 新增 ABOUT ME 页（Version 2：Let Me Guide You） |
+| （本次） | ABOUT ME 页按参考网站的做法重做（作品地图封面、逐词显现、YOU ARE HERE 路线条） |

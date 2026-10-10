@@ -20,27 +20,53 @@
   </nav>
 </header>
 
-<!-- About Me, version 2 ("Let Me Guide You"), set like a project page: a full-screen
-     cover (every work as a landmark on the map), the words, then the way on to the work -->
+<!-- About Me, version 2 ("Let Me Guide You").
+     Ways borrowed from the reference survey (prolilab/references), in D2's own type and colours:
+     - the cover is a map: every work is a landmark, the one nearest the mouse lights up and
+       shows its name; each opens its work
+     - the words are a route: one paragraph per screen, lighting up word by word from dim to
+       white as you go (Ning Huang), with a "you are here" rail beside them (the landmark idea
+       in statement-to-website.md)
+     - the closing line is the way on to the work -->
 <main class="project about" id="about">
-  <section class="p-cover">
-    <div class="media a-map" id="a-map" aria-hidden="true"></div>
+  <section class="p-cover ab-cover">
+    <div class="media a-map" id="a-map"></div>
+    <span class="glass ab-pin" id="ab-pin" aria-hidden="true"></span>
     <div class="p-head">
       <h1>Let Me Guide You</h1>
       <p class="p-sub">Zihe Wang</p>
       <ul class="tags"><li>VISUAL COMMUNICATION</li><li>INFORMATION DESIGN</li></ul>
     </div>
   </section>
-  <div class="p-body">
-    <div class="p-intro">
-      <p class="p-label">ABOUT ME</p>
-      <div>
-        <p class="p-text">I find my way by landmarks. After walking a route once, I remember its buildings and details almost like a photograph, and the next time I know exactly where to go. I think this is my special skill. When I travel and someone takes the wrong turn, I just say, "Follow me, I know where to go."</p>
-        <p class="p-text">Long text can be overwhelming, but one clear path tells you where you are. To me, design should guide people. I work in visual communication and information design, and I create visuals that act as landmarks, so people can find what they need at a glance.</p>
-        <p class="p-text">I design for everyday people, like the community members I registered as a hospital volunteer during COVID. With teammates, I keep everything clear and organized. On my first project as a team leader, I was strong and strict, and it caused conflicts with my team. I learned that guiding people also means seeing what each person is good at, and encouraging them.</p>
-        <p class="p-text">When a path is blocked, I do not give up. I like a twist on a Chinese saying: "Nothing is hard if you are willing to give up." But I never give up the goal, only the route that is not working. In my free time, I go on road trips, and every trip reminds me how big the world is and how many routes are still waiting for me to explore.</p>
-      </div>
+
+  <section class="ab-route">
+    <ol class="ab-rail" id="ab-rail" aria-hidden="true">
+      <li><span class="ab-dot"></span>01</li>
+      <li><span class="ab-dot"></span>02</li>
+      <li><span class="ab-dot"></span>03</li>
+      <li><span class="ab-dot"></span>04</li>
+    </ol>
+    <div class="ab-steps">
+      <article class="ab-step">
+        <p class="p-label">01 / 04</p>
+        <p class="ab-text" data-reveal-words>I find my way by landmarks. After walking a route once, I remember its buildings and details almost like a photograph, and the next time I know exactly where to go. I think this is my special skill. When I travel and someone takes the wrong turn, I just say, "Follow me, I know where to go."</p>
+      </article>
+      <article class="ab-step">
+        <p class="p-label">02 / 04</p>
+        <p class="ab-text" data-reveal-words>Long text can be overwhelming, but one clear path tells you where you are. To me, design should guide people. I work in visual communication and information design, and I create visuals that act as landmarks, so people can find what they need at a glance.</p>
+      </article>
+      <article class="ab-step">
+        <p class="p-label">03 / 04</p>
+        <p class="ab-text" data-reveal-words>I design for everyday people, like the community members I registered as a hospital volunteer during COVID. With teammates, I keep everything clear and organized. On my first project as a team leader, I was strong and strict, and it caused conflicts with my team. I learned that guiding people also means seeing what each person is good at, and encouraging them.</p>
+      </article>
+      <article class="ab-step">
+        <p class="p-label">04 / 04</p>
+        <p class="ab-text" data-reveal-words>When a path is blocked, I do not give up. I like a twist on a Chinese saying: "Nothing is hard if you are willing to give up." But I never give up the goal, only the route that is not working. In my free time, I go on road trips, and every trip reminds me how big the world is and how many routes are still waiting for me to explore.</p>
+      </article>
     </div>
+  </section>
+
+  <div class="p-body">
     <div class="p-intro">
       <p class="p-label">GET IN TOUCH</p>
       <div><p class="p-text"><a class="a-mail" href="mailto:ebadudu1234@gmail.com">ebadudu1234@gmail.com</a></p></div>
