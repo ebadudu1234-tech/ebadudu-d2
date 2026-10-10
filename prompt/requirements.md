@@ -121,3 +121,4 @@
 | `50511cf` | Code For Fun：展会大墙移到集装箱展台图前面 |
 | `b5acf59` | WORK 卡片标签：去掉描边只留背景模糊，和标题一样只在触碰时出现 |
 | `c60c31f` | 新增 2025 作品 Modular Typefaces（分类系统海报） |
+| （本次） | 新增 2023 作品 Chayang Old Street Renewal |

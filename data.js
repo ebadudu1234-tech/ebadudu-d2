@@ -182,6 +182,15 @@ const PROJECTS = [
     ],
   },
   {
+    slug: 'old-street', title: 'Old Walls, New Life: Chayang Old Street Renewal', year: 2023, tags: ['STREETSCAPE', 'ENVIRONMENTAL'], cover: 0, big: [1], pairs: [[2, 3]],
+    subtitle: 'Streetscape renewal, environmental design | Undergraduate graduation project, 2023',
+    text: [
+      `Chayang Old Street is in Yangtou, Fu'an, in Fujian. In the Ming and Qing dynasties, Yangtou was an important trading place on the inland rivers of eastern Fujian, and today it is a Fujian provincial historic and cultural district. The street is about 260 meters long and only about 4 meters wide. It still keeps an old dock and houses from the Ming, Qing and Republic periods, and together with six small lanes it forms a "one street, six lanes" layout.`,
+      `But today the street feels tired. The facades are all different styles and don't match the old character anymore. Walls are bare and worn, roofs have illegal add-ons, and air conditioners, cables and shop signs hang everywhere. The street is narrow, people and cars share it, and there is nowhere to sit and rest. Most shops are the same kind, so the street has little life.`,
+      `I wanted to give the old street a new life and make it a place where people in Fu'an can slow down, walk and relax every day. I kept the old buildings and their scale, gave the timber buildings wooden shopfronts, covered the brick-concrete walls with small grey bricks, and moved the cables underground. My main focus was the east and west entrances and the street views.`,
+    ],
+  },
+  {
     slug: 'restaurant', title: 'Modern Rhythm, Day and Night Change: Restaurant Design', year: 2023, tags: ['INTERIOR'], cover: 0, big: [1], pairs: [[2, 3]],
     subtitle: 'Interior design, team project | My role: CAD floor plans and colored floor plans',
     text: [

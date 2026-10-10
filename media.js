@@ -256,6 +256,15 @@ const MEDIA = {
     { src: 'assets/work/nuclear-tide/04.jpg', w: 3840, h: 2160 },
     { src: 'assets/work/nuclear-tide/05.jpg', w: 3840, h: 2160 },
   ],
+  'old-street': [
+    { src: 'assets/work/old-street/01.jpg', w: 2400, h: 1348 },
+    { src: 'assets/work/old-street/02.jpg', w: 2400, h: 788 },
+    { src: 'assets/work/old-street/03.jpg', w: 2400, h: 1348 },
+    { src: 'assets/work/old-street/04.jpg', w: 2400, h: 1350 },
+    { src: 'assets/work/old-street/05.jpg', w: 1772, h: 996 },
+    { src: 'assets/work/old-street/06.jpg', w: 2400, h: 1350 },
+    { src: 'assets/work/old-street/07.jpg', w: 2400, h: 1335 },
+  ],
   'restaurant': [
     { src: 'assets/work/restaurant/01.jpg', w: 2400, h: 1800 },
     { src: 'assets/work/restaurant/02.jpg', w: 2400, h: 943 },
