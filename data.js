@@ -11,6 +11,7 @@
    hero     : which media item opens the project page (default 0)
    hoverVideo: which video plays when the cover is hovered (default: the first video)
    start    : seconds to skip at the head of the cover / hero video (title card)
+   sequence : media items that take turns in one big frame under the intro, in order
    fit      : 'contain' shows the hero without cropping (for tall pages)
    intro    : paragraph beside the first image on the project page
    detail   : paragraph further down the project page
@@ -23,7 +24,8 @@ const PROJECTS = [
     detail: 'The system carries through the storefront, interior, cups, menu screens, enamel pins, stickers and a gift box, so every touchpoint feels like part of the same sweet afternoon.',
   },
   {
-    slug: 'switchback', title: 'Switchback', year: 2026, tags: ['PRODUCT', 'BRAND', 'VIDEO'], cover: 8,
+    // sequence: hand sketch → line drawing → labelled render, taking turns under the intro
+    slug: 'switchback', title: 'Switchback', year: 2026, tags: ['PRODUCT', 'BRAND', 'VIDEO'], cover: 8, sequence: [1, 2, 3],
     intro: 'Outdoor gear for dogs: a harness with a zip-on detachable hood, reflective piping and neon-lime hardware, plus a travel kit with a collapsible bowl.',
     detail: 'From hand sketches to rendered product views, labels, retail display and lifestyle scenes — designed for walks that go from city streets at night to beach runs.',
   },

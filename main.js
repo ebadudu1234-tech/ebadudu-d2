@@ -923,7 +923,14 @@ function renderProject(root) {
   const media = mediaOf(p);
   const heroIdx = p.hero || 0;
   const hero = media[heroIdx];
-  const rest = media.filter((_, i) => i !== heroIdx);
+  // `sequence`: images that take turns in one big frame under the intro (e.g. sketch → line → render)
+  const seqIdx = p.sequence || [];
+  const seq = seqIdx.map((i) => media[i]).filter(Boolean);
+  const rest = media.filter((_, i) => i !== heroIdx && !seqIdx.includes(i));
+  const seqHtml = seq.length
+    ? `<figure class="p-seq" style="--r:${(seq[0].w / seq[0].h).toFixed(4)}">${
+      seq.map((m, i) => `<img src="${m.src}" alt="${esc(p.title)}"${i ? '' : ' class="is-on"'} decoding="async">`).join('')}</figure>`
+    : '';
 
   const fig = (m, i) => m.type === 'video'
     ? `<figure style="--r:${(m.w / m.h).toFixed(4)};--d:${i * 0.1}s"><video src="${m.src}" poster="${m.poster}" controls playsinline preload="none"></video></figure>`
@@ -946,6 +953,7 @@ function renderProject(root) {
         <p class="p-label">ABOUT THIS WORK</p>
         <div>${p.intro ? `<p class="p-text">${esc(p.intro)}</p>` : ''}${p.detail ? `<p class="p-text">${esc(p.detail)}</p>` : ''}</div>
       </div>
+      ${seqHtml}
       <div class="p-gallery">${rows}</div>
     </div>
     <a class="p-next" href="${projectUrl(next)}"><img src="${coverSrc(next)}" alt="" loading="lazy"><span><small>Next work</small>${esc(next.title)}</span></a>`;
@@ -957,8 +965,26 @@ function renderProject(root) {
     v.play().catch(() => {});
   }
   requestAnimationFrame(() => root.querySelector('.p-cover').classList.add('is-in'));
-  reveal('.p-row figure');
+  reveal('.p-row figure, .p-seq');
   setupFollow('.p-next');
+  const seqEl = root.querySelector('.p-seq');
+  if (seqEl) playSequence(seqEl);
+}
+
+/* The sequence frame: images cross-fade in turn, starting from the first (the sketch)
+   when the frame comes into view */
+function playSequence(el, hold = 2600) {
+  const imgs = [...el.querySelectorAll('img')];
+  let n = 0, timer = 0;
+  const go = () => {
+    imgs.forEach((im, i) => im.classList.toggle('is-on', i === n));
+    timer = setTimeout(() => { n = (n + 1) % imgs.length; go(); }, hold);
+  };
+  // it starts at the sketch; scrolling away only pauses it, coming back carries on
+  new IntersectionObserver(([e]) => {
+    if (e.isIntersecting && !timer) go();
+    if (!e.isIntersecting && timer) { clearTimeout(timer); timer = 0; }
+  }, { threshold: 0.15 }).observe(el);
 }
 
 /* ============ Boot ============ */
