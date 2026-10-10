@@ -750,33 +750,27 @@ function createFxLite(canvas) {
   };
 }
 
-/* ============ Begin animation ============
-   Works fly in from outside the screen and pile into one rectangle, which turns grey;
-   the grey rectangle grows to full screen while the first work fades in. Under 3s. */
+/* ============ Begin animation (2s) ============
+   A grey block sits in the middle. Works keep flying in from outside and melt into it:
+   each photo fades to its grey ghost, and the ghosts run through a gooey SVG filter so
+   they stick to the block and merge. The block swells as it swallows them, then keeps
+   growing to full screen while the first work fades in. */
 async function playIntro(intro) {
   const W = innerWidth, H = innerHeight;
-  const cw = Math.min(W * 0.36, 480), ch = cw * 0.7;
-  const cx = W / 2, cy = H * 0.47;
-  const x0 = cx - cw / 2, y0 = cy - ch / 2;
+  const DUR = 1800;                                   // + 0.2s fade = 2s in all
+  const w0 = Math.min(W * 0.36, 480), h0 = w0 * 0.7;  // the block at its "swallowing" size
+  const rect = (w, h, r = 8) => `inset(${(H - h) / 2}px ${(W - w) / 2}px ${(H - h) / 2}px ${(W - w) / 2}px round ${r}px)`;
   const first = bySlug(SLIDES[0]);
   const pool = (INTRO_DECK && INTRO_DECK.length ? INTRO_DECK : PROJECTS.map((p) => p.slug))
-    .filter((s) => s !== SLIDES[0]).map(bySlug).filter(Boolean);
+    .filter((s) => s !== SLIDES[0]).map(bySlug).filter(Boolean).slice(0, 12);
 
-  const cards = pool.slice(0, 16).map((p) => {
-    const el = document.createElement('div');
-    el.className = 'deck-card';
-    Object.assign(el.style, { width: `${cw}px`, height: `${ch}px` });
-    el.innerHTML = `<img src="${coverSrc(p)}" alt="" decoding="async">`;
-    intro.append(el);
-    return el;
-  });
-  const block = document.createElement('div');
-  block.className = 'deck-block';
-  Object.assign(block.style, { left: `${x0}px`, top: `${y0}px`, width: `${cw}px`, height: `${ch}px` });
-  block.innerHTML = first ? `<img src="${coverSrc(first)}" alt="">` : '';
-  intro.append(block);
+  const goo = document.getElementById('goo');
+  const photos = document.getElementById('intro-photos');
+  const block = document.getElementById('goo-block');
+  const reveal = document.getElementById('intro-reveal');
   const text = document.getElementById('intro-text');
-  text.style.top = `${y0 + ch + 22}px`;
+  if (first) reveal.style.backgroundImage = `url("${coverSrc(first)}")`;
+  text.style.top = `${(H + h0) / 2 + 22}px`;
 
   let done = false;
   const finish = () => {
@@ -784,47 +778,54 @@ async function playIntro(intro) {
     done = true;
     intro.classList.add('is-leaving');
     document.body.classList.remove('intro-on');
-    setTimeout(() => intro.classList.add('is-gone'), 320);
+    setTimeout(() => intro.classList.add('is-gone'), 220);
   };
   intro.addEventListener('click', finish);
   addEventListener('keydown', finish, { once: true });
 
-  // give the covers a moment (never more than 0.25s)
-  await Promise.race([Promise.all(cards.map((c) => c.querySelector('img').decode().catch(() => {}))), wait(250)]);
-  if (done) return;
+  // the block: appears, swells while swallowing (to 1.3s), then grows to full screen
+  const grow = [
+    { offset: 0, clipPath: rect(0, 0) },
+    { offset: 0.08, clipPath: rect(w0 * 0.55, h0 * 0.55), easing: 'cubic-bezier(.3, 0, .2, 1)' },
+    { offset: 0.72, clipPath: rect(w0, h0), easing: 'cubic-bezier(.76, 0, .24, 1)' },
+    { offset: 1, clipPath: rect(W, H, 0) },
+  ];
+  grow[0].easing = 'cubic-bezier(.34, 1.5, .64, 1)';
+  block.animate(grow, { duration: DUR, fill: 'forwards' });
+  // the first work opens through the same shape, fading in while it grows
+  reveal.animate(grow.map((k) => ({ ...k, opacity: k.offset < 0.72 ? 0 : k.offset === 1 ? 1 : 0 })), { duration: DUR, fill: 'forwards' });
+  setTimeout(() => !done && text.classList.add('is-on'), 300);
+  setTimeout(() => text.classList.remove('is-on'), 1250);
 
-  // 1. fly in from every side and pile up, each a little off-square
-  const far = Math.hypot(W, H) * 0.62 + cw;
-  cards.forEach((el, i) => {
-    const ang = (i / cards.length) * Math.PI * 2 + Math.random() * 0.6;
-    const sx = cx + Math.cos(ang) * far - cw / 2, sy = cy + Math.sin(ang) * far - ch / 2;
-    const ex = x0 + (Math.random() - 0.5) * 22, ey = y0 + (Math.random() - 0.5) * 16;
-    const r0 = (Math.random() - 0.5) * 70, r1 = (Math.random() - 0.5) * 6;
-    el.animate(
-      [{ transform: `translate(${sx}px, ${sy}px) rotate(${r0}deg)` }, { transform: `translate(${ex}px, ${ey}px) rotate(${r1}deg)` }],
-      { duration: 600, delay: i * 30, easing: 'cubic-bezier(.16, 1, .3, 1)', fill: 'forwards' });
+  // works fly in one after another and melt into the block
+  const cw = w0 * 0.5, ch = cw * 0.7;
+  const far = Math.hypot(W, H) * 0.6 + cw;
+  pool.forEach((p, i) => {
+    const ghost = document.createElement('div');
+    ghost.className = 'goo-ghost';
+    const photo = document.createElement('div');
+    photo.className = 'intro-photo';
+    photo.innerHTML = `<img src="${coverSrc(p)}" alt="" decoding="async">`;
+    [ghost, photo].forEach((el) => Object.assign(el.style, { width: `${cw}px`, height: `${ch}px` }));
+    goo.append(ghost);
+    photos.append(photo);
+
+    const ang = (i / pool.length) * Math.PI * 2 + Math.random() * 0.5;
+    const sx = W / 2 + Math.cos(ang) * far - cw / 2, sy = H / 2 + Math.sin(ang) * far - ch / 2;
+    const ex = W / 2 - cw / 2, ey = H / 2 - ch / 2;
+    const r0 = (Math.random() - 0.5) * 60;
+    const path = [
+      { transform: `translate(${sx}px, ${sy}px) rotate(${r0}deg) scale(1)` },
+      { transform: `translate(${ex + (sx - ex) * 0.18}px, ${ey + (sy - ey) * 0.18}px) rotate(${r0 * 0.2}deg) scale(.8)`, offset: 0.7 },
+      { transform: `translate(${ex}px, ${ey}px) rotate(0deg) scale(.3)` },
+    ];
+    const timing = { duration: 520, delay: 60 + i * 70, easing: 'cubic-bezier(.3, .1, .3, 1)', fill: 'forwards' };
+    ghost.animate(path, timing);
+    photo.animate(path, timing);
+    photo.animate([{ opacity: 1 }, { opacity: 1, offset: 0.45 }, { opacity: 0, offset: 0.82 }, { opacity: 0 }], timing);
   });
-  await wait(cards.length * 30 + 600);
-  if (done) return;
 
-  // 2. the pile becomes one grey rectangle, with the line of text under it
-  block.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 220, easing: 'ease-out', fill: 'forwards' });
-  text.classList.add('is-on');
-  await wait(340);
-  if (done) return;
-  cards.forEach((el) => el.remove());
-
-  // 3. it grows to full screen while the first work fades in
-  const dur = 650, ease = 'cubic-bezier(.76, 0, .24, 1)';
-  block.animate(
-    [
-      { left: `${x0}px`, top: `${y0}px`, width: `${cw}px`, height: `${ch}px`, borderRadius: '8px' },
-      { left: '0px', top: '0px', width: `${W}px`, height: `${H}px`, borderRadius: '0px' },
-    ],
-    { duration: dur, easing: ease, fill: 'forwards' });
-  block.querySelector('img')?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: dur, easing: 'ease-in', fill: 'forwards' });
-  text.classList.remove('is-on');
-  await wait(dur);
+  await wait(DUR);
   finish();
 }
 

@@ -20,10 +20,21 @@
   </nav>
 </header>
 
-<!-- Begin animation: works fly in from outside → stack into one rectangle → it grows into the first work -->
+<!-- Begin animation (2s): works keep flying into a grey block and melt into it (gooey),
+     the block swells as it swallows them, then grows to full screen as the first work fades in -->
 <div class="intro" id="intro" aria-hidden="true">
+  <div class="goo" id="goo"><div class="goo-block" id="goo-block"></div></div>
+  <div class="intro-photos" id="intro-photos"></div>
+  <div class="intro-reveal" id="intro-reveal"></div>
   <p class="intro-text" id="intro-text">ZIHE WANG · SELECTED WORKS</p>
   <span class="skip">click to skip</span>
+  <!-- the sticky "goo": blur, then sharpen the edge, so nearby grey shapes bridge and merge -->
+  <svg class="goo-svg" width="0" height="0" aria-hidden="true">
+    <filter id="goo-filter">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="11" />
+      <feColorMatrix mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -9" />
+    </filter>
+  </svg>
 </div>
 
 <!-- the home page does not scroll: one full-screen stage, works play one after another -->

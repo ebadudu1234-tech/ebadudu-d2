@@ -198,31 +198,39 @@ body.intro-on .dots, body.intro-on .go, body.intro-on .slide-cap { opacity: 0; p
   overflow: hidden;
   background: var(--bg);
   cursor: pointer;
-  transition: opacity .3s ease;
+  transition: opacity .2s ease;
 }
 .intro.is-leaving { opacity: 0; pointer-events: none; }
 .intro.is-gone { display: none; }
-.deck-card {
+/* goo layer: grey shapes only, run through the SVG goo filter so they stick and merge */
+.goo { position: absolute; inset: 0; filter: url(#goo-filter); }
+.goo-block {
+  position: absolute;
+  inset: 0;
+  background: var(--block);
+  clip-path: inset(50% 50% 50% 50%);
+}
+.goo-ghost, .intro-photo {
   position: absolute;
   left: 0;
   top: 0;
-  overflow: hidden;
   border-radius: 8px;
-  background: var(--block);
-  box-shadow: 0 18px 50px rgba(0, 0, 0, .5);
-  will-change: transform;
+  will-change: transform, opacity;
 }
-.deck-card img { width: 100%; height: 100%; max-width: none; object-fit: cover; }
-/* the grey rectangle the works merge into; it grows into the first work */
-.deck-block {
+.goo-ghost { background: var(--block); }
+/* the photos ride on top of their grey ghosts and fade as they melt in */
+.intro-photos { position: absolute; inset: 0; pointer-events: none; }
+.intro-photo { overflow: hidden; box-shadow: 0 16px 44px rgba(0, 0, 0, .45); }
+.intro-photo img { width: 100%; height: 100%; max-width: none; object-fit: cover; }
+/* the first work, opened through the growing block */
+.intro-reveal {
   position: absolute;
-  overflow: hidden;
-  border-radius: 8px;
-  background: var(--block);
+  inset: 0;
+  background: center / cover no-repeat;
   opacity: 0;
+  clip-path: inset(50% 50% 50% 50%);
 }
-.deck-block img { width: 100%; height: 100%; max-width: none; object-fit: cover; opacity: 0; }
-.intro-text {
+.goo-svg { position: absolute; width: 0; height: 0; }.intro-text {
   position: absolute;
   left: 50%;
   margin: 0;
