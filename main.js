@@ -55,7 +55,7 @@ function pillCursor(pill, isOn) {
   addEventListener('pointermove', (e) => {
     x = e.clientX; y = e.clientY;
     pill.classList.add('is-following');
-    pill.classList.toggle('is-on', isOn(e.target));
+    pill.classList.toggle('is-on', isOn(e.target instanceof Element ? e.target : document.body));
     if (!queued) { queued = true; requestAnimationFrame(place); }
   }, { passive: true });
   document.addEventListener('pointerleave', () => pill.classList.remove('is-on'));
@@ -93,7 +93,8 @@ function setupHome() {
   dots.innerHTML = list.map((p) => `<button type="button" aria-label="${esc(p.title)}"></button>`).join('');
   const buttons = [...dots.children];
 
-  const fx = createFx(document.getElementById('fx'));
+  const canvas = document.getElementById('fx');
+  const fx = flowSupported() ? createFxFlow(canvas) : createFxLite(canvas);
   if (fx) document.body.classList.add('fx-on');
 
   let current = -1, timer = 0;
@@ -143,11 +144,344 @@ function setupGoFollow() {
   pillCursor(document.getElementById('go'), (target) => !target.closest('.bar, .slide-cap, .dots'));
 }
 
-/* ============ Screen-wave particles (WebGL) ============
+/* ============ Flowing particles (WebGL2 GPU simulation) ============
+   Every particle has its own offset and velocity, stored in float textures and stepped
+   on the GPU each frame. The mouse pushes nearby particles away, carries them along its
+   path and swirls them; disturbed particles drift on a curl-noise flow, then a soft
+   spring brings each one home with a little overshoot. Where particles are out, the
+   picture underneath drops to ~10% so they carry the image; moving ones glint. */
+function flowSupported() {
+  try {
+    const gl = document.createElement('canvas').getContext('webgl2');
+    return !!(gl && gl.getExtension('EXT_color_buffer_float'));
+  } catch (e) { return false; }
+}
+
+function createFxFlow(canvas) {
+  const gl = canvas.getContext('webgl2', { antialias: false, alpha: false, premultipliedAlpha: false });
+  if (!gl || !gl.getExtension('EXT_color_buffer_float')) return null;
+
+  /* feel — tweak here */
+  const FEEL = {
+    radius: 74,     // px reach of the mouse (KA 0.6667 of the first version)
+    repel: 2200,    // push away while the mouse moves
+    rest: 240,      // a gentle push even when the mouse is still
+    carry: 1.1,     // how much particles travel with the mouse (kept short)
+    swirl: 1300,    // sideways spin around the mouse
+    flow: 380,      // curl-noise drift of disturbed particles
+    spring: 22,     // pull home (higher = snappier)
+    damping: 3.3,   // friction (lower = more overshoot / wobble)
+    fade: 1.1,      // how fast a particle calms down again
+  };
+
+  const V = '#version 300 es\n';
+  const quadVS = `${V}in vec2 aQ; out vec2 vUv; void main() { vUv = aQ * 0.5 + 0.5; gl_Position = vec4(aQ, 0.0, 1.0); }`;
+  const picture = `
+    uniform sampler2D uT0, uT1; uniform vec2 uAsp, uRes; uniform float uMix;
+    vec2 cover(vec2 uv, float ia) {
+      float sa = uRes.x / uRes.y;
+      vec2 r = sa > ia ? vec2(1.0, ia / sa) : vec2(sa / ia, 1.0);
+      return (uv - 0.5) * r + 0.5;
+    }
+    vec3 picture(vec2 p) {
+      vec2 uv = vec2(p.x / uRes.x, 1.0 - p.y / uRes.y);
+      return mix(texture(uT0, cover(uv, uAsp.x)).rgb, texture(uT1, cover(uv, uAsp.y)).rgb, uMix);
+    }`;
+
+  // 1. step the simulation (one texel = one particle; home = its grid cell)
+  const stepFS = `${V}precision highp float;
+    uniform sampler2D uS0, uS1;
+    uniform float uSp, uDt, uTime, uOn;
+    uniform vec2 uMouse, uMVel;
+    uniform float uR, uRepel, uRest, uCarry, uSwirl, uFlow, uSpring, uDamp, uFade;
+    layout(location = 0) out vec4 o0;
+    layout(location = 1) out vec4 o1;
+    vec2 h2(vec2 p) { p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3))); return -1.0 + 2.0 * fract(sin(p) * 43758.5453); }
+    float noise(vec2 p) {
+      vec2 i = floor(p), f = fract(p), u = f * f * (3.0 - 2.0 * f);
+      return mix(mix(dot(h2(i), f), dot(h2(i + vec2(1, 0)), f - vec2(1, 0)), u.x),
+                 mix(dot(h2(i + vec2(0, 1)), f - vec2(0, 1)), dot(h2(i + vec2(1, 1)), f - vec2(1, 1)), u.x), u.y);
+    }
+    vec2 curl(vec2 p) {
+      float e = 0.05;
+      float dx = noise(p + vec2(e, 0.0)) - noise(p - vec2(e, 0.0));
+      float dy = noise(p + vec2(0.0, e)) - noise(p - vec2(0.0, e));
+      return vec2(dy, -dx) / (2.0 * e);
+    }
+    void main() {
+      ivec2 ij = ivec2(gl_FragCoord.xy);
+      vec4 s0 = texelFetch(uS0, ij, 0);
+      float act = texelFetch(uS1, ij, 0).x;
+      vec2 cell = (vec2(ij) + 0.5) * uSp;
+      float r1 = fract(sin(dot(cell, vec2(12.9898, 78.233))) * 43758.5453);
+      float r2 = fract(sin(dot(cell + 3.1, vec2(12.9898, 78.233))) * 43758.5453);
+      vec2 home = cell + (vec2(r1, r2) - 0.5) * uSp * 0.9;   // scattered inside its cell: no visible grid
+      float weight = 0.55 + 0.9 * r2;                         // every particle reacts a bit differently
+      vec2 off = s0.xy, vel = s0.zw;
+      vec2 d = home + off - uMouse;
+      float dist = length(d);
+      vec2 n = d / (dist + 0.001);
+      float fall = exp(-dist * dist / (uR * uR)) * uOn;
+      float sp = clamp(length(uMVel) / 900.0, 0.0, 1.6);
+      vec2 F = (n * fall * (uRest + uRepel * sp)
+             + uMVel * fall * uCarry
+             + vec2(-n.y, n.x) * fall * sp * uSwirl) * weight;
+      act = max(act * exp(-uDt * uFade), fall * min(1.0, 0.2 + sp));
+      F += curl(home * 0.011 + vec2(uTime * 0.13, -uTime * 0.09) + r1 * 0.4) * uFlow * act;
+      F -= off * uSpring;
+      vel += F * uDt;
+      vel *= exp(-uDt * uDamp);
+      off += vel * uDt;
+      float L = length(off);
+      if (L > 200.0) off *= 200.0 / L;
+      o0 = vec4(off, vel);
+      o1 = vec4(act, 0.0, 0.0, 1.0);
+    }`;
+
+  // 2. the picture, nudged by the particles' offsets and darkened where they are out
+  const quadFS = `${V}precision highp float;
+    in vec2 vUv; out vec4 o;
+    uniform sampler2D uS0, uS1; uniform vec2 uGrid, uShift;
+    ${picture}
+    void main() {
+      vec2 p = vec2(vUv.x, 1.0 - vUv.y) * uRes;
+      vec2 g = (p + uShift) / uGrid;   // this pixel's place on the particle grid
+      float act = texture(uS1, g).x;
+      vec2 off = texture(uS0, g).xy;
+      vec3 c = picture(p - off * 0.35 - uShift);
+      float hole = smoothstep(0.05, 0.42, act);
+      o = vec4(c * (1.0 - hole * 0.9), 1.0);
+    }`;
+
+  // 3. the particles, coloured from their home in the picture; moving ones glint
+  const ptsVS = `${V}precision highp float;
+    uniform sampler2D uS0, uS1; uniform int uCols; uniform float uSp, uDpr, uTime; uniform vec2 uShift;
+    ${picture}
+    out vec3 vCol; out float vA;
+    float hash(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
+    void main() {
+      ivec2 ij = ivec2(gl_VertexID % uCols, gl_VertexID / uCols);
+      vec4 s0 = texelFetch(uS0, ij, 0);
+      float act = texelFetch(uS1, ij, 0).x;
+      vec2 cell = (vec2(ij) + 0.5) * uSp;
+      float r1 = fract(sin(dot(cell, vec2(12.9898, 78.233))) * 43758.5453);
+      float r2 = fract(sin(dot(cell + 3.1, vec2(12.9898, 78.233))) * 43758.5453);
+      vec2 home = cell + (vec2(r1, r2) - 0.5) * uSp * 0.9;
+      float h = r1;
+      float glint = pow(0.5 + 0.5 * sin(uTime * 5.0 + h * 61.0 + length(s0.zw) * 0.015), 14.0) * act;
+      vec2 p = home + s0.xy - uShift;
+      vCol = picture(home - uShift) * (1.0 + act * 0.35) + glint * 0.9;
+      vA = smoothstep(0.04, 0.28, act) * (0.55 + 0.45 * h);
+      gl_PointSize = (1.3 + act * 1.7 + glint * 1.6) * uDpr;
+      gl_Position = vA < 0.01 ? vec4(2.0, 2.0, 2.0, 1.0) : vec4(p.x / uRes.x * 2.0 - 1.0, 1.0 - p.y / uRes.y * 2.0, 0.0, 1.0);
+    }`;
+  const ptsFS = `${V}precision mediump float;
+    in vec3 vCol; in float vA; out vec4 o;
+    void main() {
+      float r = length(gl_PointCoord - 0.5);
+      if (r > 0.5) discard;
+      o = vec4(vCol, vA * (1.0 - smoothstep(0.28, 0.5, r)));
+    }`;
+
+  const compile = (type, src) => {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+    return s;
+  };
+  const program = (vs, fs) => {
+    const p = gl.createProgram();
+    gl.attachShader(p, compile(gl.VERTEX_SHADER, vs));
+    gl.attachShader(p, compile(gl.FRAGMENT_SHADER, fs));
+    gl.bindAttribLocation(p, 0, 'aQ');
+    gl.linkProgram(p);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+    const u = {};
+    const n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS);
+    for (let i = 0; i < n; i++) { const name = gl.getActiveUniform(p, i).name; u[name] = gl.getUniformLocation(p, name); }
+    return { p, u };
+  };
+  let stepP, quadP, ptsP;
+  try {
+    stepP = program(quadVS, stepFS);
+    quadP = program(quadVS, quadFS);
+    ptsP = program(ptsVS, ptsFS);
+  } catch (e) { console.warn('flow fx off:', e.message); return null; }
+
+  const vao = gl.createVertexArray();
+  gl.bindVertexArray(vao);
+  const quadBuf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, quadBuf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0);
+  gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+  const emptyVao = gl.createVertexArray();  // particles need no attributes (gl_VertexID)
+
+  const tex = (w, h, filter, internal, format, type) => {
+    const t = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, t);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
+    gl.texImage2D(gl.TEXTURE_2D, 0, internal, w, h, 0, format, type, null);
+    return t;
+  };
+
+  // two ping-pong states, each: [offset.xy, velocity.xy] + [activity]
+  let SP = 4, cols = 0, rows = 0, W = 0, H = 0, dpr = 1;
+  let states = [];
+  const makeStates = () => {
+    states.forEach((s) => { gl.deleteFramebuffer(s.fb); gl.deleteTexture(s.a); gl.deleteTexture(s.b); });
+    states = [0, 1].map(() => {
+      const a = tex(cols, rows, gl.LINEAR, gl.RGBA16F, gl.RGBA, gl.HALF_FLOAT);
+      const b = tex(cols, rows, gl.LINEAR, gl.RGBA16F, gl.RGBA, gl.HALF_FLOAT);
+      const fb = gl.createFramebuffer();
+      gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, a, 0);
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT1, gl.TEXTURE_2D, b, 0);
+      gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
+      gl.viewport(0, 0, cols, rows);
+      gl.clearColor(0, 0, 0, 0);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      return { a, b, fb };
+    });
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  };
+  const resize = () => {
+    dpr = Math.min(devicePixelRatio || 1, 1.5);
+    W = innerWidth; H = innerHeight;
+    canvas.width = Math.round(W * dpr);
+    canvas.height = Math.round(H * dpr);
+    SP = W < 700 ? 5 : 4;
+    cols = Math.ceil(W / SP); rows = Math.ceil(H / SP);
+    makeStates();
+  };
+  resize();
+  addEventListener('resize', resize);
+
+  // the work pictures: slot 0 going away, slot 1 arriving
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+  const imgTex = () => {
+    const t = tex(1, 1, gl.LINEAR, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 255]));
+    return t;
+  };
+  const slots = [{ tex: imgTex(), src: null, asp: 1 }, { tex: imgTex(), src: null, asp: 1 }];
+  let mixv = 1, mixFrom = 0;
+  const upload = (slot) => {
+    const s = slot.src;
+    if (!s) return;
+    const v = s.video;
+    const useVideo = v && v.readyState >= 2 && v.videoWidth;
+    const el = useVideo ? v : s.img;
+    if (!useVideo && (!el.complete || !el.naturalWidth || slot.uploaded === el)) return;
+    gl.bindTexture(gl.TEXTURE_2D, slot.tex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, el);
+    slot.asp = useVideo ? v.videoWidth / v.videoHeight : el.naturalWidth / el.naturalHeight;
+    slot.uploaded = useVideo ? null : el;
+  };
+
+  // mouse: exact position + a smoothed velocity (px/s) that settles to 0 when it stops
+  let mx = -9999, my = -9999, on = 0, onTarget = 0, vx = 0, vy = 0, rawVx = 0, rawVy = 0, lastMove = 0, lastT = 0, lx = 0, ly = 0;
+  addEventListener('pointermove', (e) => {
+    const list = e.getCoalescedEvents ? e.getCoalescedEvents() : [];
+    (list.length ? list : [e]).forEach((ev) => {
+      if (lastT) {
+        const dt = Math.max(1, ev.timeStamp - lastT) / 1000;
+        rawVx = (ev.clientX - lx) / dt;
+        rawVy = (ev.clientY - ly) / dt;
+      }
+      lx = ev.clientX; ly = ev.clientY; lastT = ev.timeStamp;
+    });
+    mx = e.clientX; my = e.clientY; onTarget = 1; lastMove = performance.now();
+  }, { passive: true });
+  document.addEventListener('pointerleave', () => { onTarget = 0; });
+
+  let sx = 0, sy = 0, prev = 0, cur = 0;
+  const frame = (now) => {
+    const dt = Math.min(0.033, prev ? (now - prev) / 1000 : 0.016);
+    prev = now;
+    if (now - lastMove > 60) { rawVx = 0; rawVy = 0; }      // the mouse has stopped
+    const k = 1 - Math.exp(-dt * 14);
+    vx += (rawVx - vx) * k; vy += (rawVy - vy) * k;
+    on += (onTarget - on) * (1 - Math.exp(-dt * 6));
+    if (mx > -9999) {
+      const e2 = 1 - Math.exp(-dt * 3);
+      sx += ((mx - W / 2) * -0.012 - sx) * e2;
+      sy += ((my - H / 2) * -0.012 - sy) * e2;
+    }
+    if (mixv < 1) mixv = Math.min(1, (now - mixFrom) / 1100);
+    upload(slots[1]);
+    if (mixv < 1) upload(slots[0]);
+
+    // step
+    const from = states[cur], to = states[1 - cur];
+    gl.bindVertexArray(vao);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, to.fb);
+    gl.viewport(0, 0, cols, rows);
+    gl.disable(gl.BLEND);
+    gl.useProgram(stepP.p);
+    const su = stepP.u;
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, from.a); gl.uniform1i(su.uS0, 0);
+    gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, from.b); gl.uniform1i(su.uS1, 1);
+    gl.uniform1f(su.uSp, SP); gl.uniform1f(su.uDt, dt); gl.uniform1f(su.uTime, now / 1000); gl.uniform1f(su.uOn, on);
+    gl.uniform2f(su.uMouse, mx + sx, my + sy); gl.uniform2f(su.uMVel, vx, vy);
+    gl.uniform1f(su.uR, FEEL.radius); gl.uniform1f(su.uRepel, FEEL.repel); gl.uniform1f(su.uRest, FEEL.rest);
+    gl.uniform1f(su.uCarry, FEEL.carry); gl.uniform1f(su.uSwirl, FEEL.swirl); gl.uniform1f(su.uFlow, FEEL.flow);
+    gl.uniform1f(su.uSpring, FEEL.spring); gl.uniform1f(su.uDamp, FEEL.damping); gl.uniform1f(su.uFade, FEEL.fade);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    cur = 1 - cur;
+    const st = states[cur];
+
+    // draw: picture, then particles
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    const bindCommon = (u) => {
+      gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, st.a); gl.uniform1i(u.uS0, 0);
+      gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, st.b); gl.uniform1i(u.uS1, 1);
+      gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, slots[0].tex); gl.uniform1i(u.uT0, 2);
+      gl.activeTexture(gl.TEXTURE3); gl.bindTexture(gl.TEXTURE_2D, slots[1].tex); gl.uniform1i(u.uT1, 3);
+      gl.uniform2f(u.uAsp, slots[0].asp, slots[1].asp);
+      gl.uniform2f(u.uRes, W, H);
+      gl.uniform1f(u.uMix, mixv);
+      gl.uniform2f(u.uShift, sx, sy);
+    };
+    gl.useProgram(quadP.p);
+    bindCommon(quadP.u);
+    gl.uniform2f(quadP.u.uGrid, cols * SP, rows * SP);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    gl.bindVertexArray(emptyVao);
+    gl.useProgram(ptsP.p);
+    bindCommon(ptsP.u);
+    gl.uniform1i(ptsP.u.uCols, cols); gl.uniform1f(ptsP.u.uSp, SP); gl.uniform1f(ptsP.u.uDpr, dpr); gl.uniform1f(ptsP.u.uTime, now / 1000);
+    gl.drawArrays(gl.POINTS, 0, cols * rows);
+    requestAnimationFrame(frame);
+  };
+  requestAnimationFrame(frame);
+
+  return {
+    setSlide(src, animate) {
+      const [a, b] = slots;
+      slots[0] = b; slots[1] = a;
+      slots[1].src = src;
+      slots[1].uploaded = null;
+      upload(slots[1]);
+      mixv = animate ? 0 : 1;
+      mixFrom = performance.now();
+    },
+  };
+}
+
+/* ============ Fallback particles (WebGL1, for browsers without the flow version) ============
    The current work is drawn on a canvas. Moving the mouse breaks the picture into
    particles coloured from the image: they are dragged along the mouse's path and
    settle back into the picture after ~1s. No ripples. */
-function createFx(canvas) {
+function createFxLite(canvas) {
   const gl = canvas.getContext('webgl', { antialias: false, premultipliedAlpha: false, alpha: false });
   if (!gl || gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS) < 2) return null;
 
