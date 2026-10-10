@@ -218,6 +218,12 @@ const MEDIA = {
     { src: 'assets/work/code-for-fun/26.jpg', w: 2400, h: 1663 },
     { src: 'assets/work/code-for-fun/27.jpg', w: 1602, h: 2400 },
   ],
+  'modular-typefaces': [
+    { src: 'assets/work/modular-typefaces/01.jpg', w: 1600, h: 2400 },
+    { src: 'assets/work/modular-typefaces/02.png', w: 1600, h: 2400 },
+    { src: 'assets/work/modular-typefaces/03.jpg', w: 1600, h: 2400 },
+    { src: 'assets/work/modular-typefaces/04.jpg', w: 1600, h: 2400 },
+  ],
   'allodox': [
     { src: 'assets/work/allodox/01.jpg', w: 3840, h: 2160 },
     { src: 'assets/work/allodox/02.jpg', w: 3840, h: 2160 },

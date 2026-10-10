@@ -139,6 +139,15 @@ const PROJECTS = [
     ],
   },
   {
+    slug: 'modular-typefaces', title: 'Modular Typefaces', year: 2025, tags: ['TYPOGRAPHY', 'POSTER', 'INFORMATION'], cover: 0, fit: 'contain',
+    subtitle: 'Typography, poster, information design',
+    // written from the brief given in chat (MY WORK/modular typefaces poster/discription.txt is still empty)
+    text: [
+      `A classification system made from my class notes, as a series of four posters. Each poster carries the basic information from the notes.`,
+      `The letters are built from one modular typeface: the same cross-shaped modules, repeated, stacked and turned into patterns. Each poster gives the modules a different surface: grey bevels around collaged space photos, white stripes over a halftone portrait, a noisy white texture above a grid of small images, and soft 3D gradients over a wall of magazine clippings. Quotes run along the edges: "Art reveals hidden structures of society." (Xu Tan), "Art ought never to try to be popular." (Oscar Wilde) and "First thought, best thought." (Jack Kerouac).`,
+    ],
+  },
+  {
     slug: 'allodox', title: 'Allodox', year: 2024, tags: ['GAME', 'INTERACTIVE'], cover: 0,
     subtitle: 'Interactive game',
     text: [
