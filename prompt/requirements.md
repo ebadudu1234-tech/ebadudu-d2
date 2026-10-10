@@ -93,11 +93,14 @@
 - 首页的粒子效果：手指离开屏幕后画面恢复，下一次触碰不会被当成一次很大的甩动。
 
 ## 5E. ABOUT ME 页（about.html）
-- 文字来自 `about me\putin\About Me.txt`，**D2 用 Version 2「Let Me Guide You」**，原文照搬。
-- **按 `prolilab/references` 里参考网站的做法重新做**（字体、颜色仍是 D2 自己的：黑底、Rokkitt、毛玻璃、绿色）：
-  - 封面是一张"地图"：所有作品缩略图变暗排成网格，每个作品是一个地标；**鼠标靠近哪个，哪个就亮起来，毛玻璃小标签写出作品名**，点击进入作品。标题 LET ME GUIDE YOU、Zihe Wang、两个标签在左下角。
-  - 文字是一条"路线"：四段文字每段约一屏，**往下滚时一个词一个词从暗变白**（参考 Ning Huang）；左边有一条固定的路线条 01–04，经过的点变白，当前的点变绿并显示 "YOU ARE HERE"（来自 statement-to-website.md 里"地标 / 你在这里"的想法）。手机上隐藏路线条，每段上面有 01 / 04 编号。
-  - GET IN TOUCH 邮箱；最后一句 "Let me guide you." 是底部大图链接，鼠标碰到出现绿色 "VIEW MY WORK"，点进 WORK。
+- 文字来自 `about me\putin\About Me.txt`，**D2 用 Version 2「Let Me Guide You」**，原文照搬、顺序不变；**没有跳到作品的链接**，唯一的链接是邮箱。
+- **新方向：一次"带路的参观"**（参考笔记里 KesselsKramer 一屏一句 + 边上的点、Oxman / Ning Huang 文字依次出现、"地标 / You are here"），用 D2 自己的风格：
+  - 和首页一样**一整屏、不滚动**：滚轮、方向键、上下/左右滑动、点击任意处（绿色胶囊光标写着 NEXT）或右边的点，都是**一次走一站**；最后一站写 BACK TO START，再点回到开头。一次长滑动只走一站。
+  - 一共 6 站：封面（LET ME GUIDE YOU + Zihe Wang + 两个毛玻璃标签）→ 01–04 四段 → 最后 "LET ME GUIDE YOU."（大写）+ GET IN TOUCH 邮箱。
+  - 每站：**重点句大字**（Rokkitt 64px，到站时一个词一个词升起），**其余小字放在毛玻璃卡片里**（右下；第三段小字在前、大字在后，卡片在左上）。
+  - 背景：每站换一张作品封面，**强烈模糊、压暗、缓慢漂移**，像经过的地标（不可点击）。
+  - 右边是首页同款的竖排点，当前站旁边有绿色 "YOU ARE HERE"。
+  - 手机：没有鼠标光标，底部有绿色 NEXT 按钮；文字避开右边的点。
 
 ## 6. 待办 / 待确认
 - [ ] PLAY AREA 页面还没有（Figma 里也没有）。ABOUT ME 已完成。
@@ -136,3 +139,4 @@
 | `ff31818` | 手机端：视频在屏幕上自动静音播放、不用点；首页粒子效果手指离开后恢复 |
 | `dd52c55` | 新增 ABOUT ME 页（Version 2：Let Me Guide You） |
 | `5c181e3` | ABOUT ME 页按参考网站的做法重做（作品地图封面、逐词显现、YOU ARE HERE 路线条） |
+| （本次） | ABOUT ME 换方向：一屏一站的带路参观（滚轮/键盘/滑动/点击走一站，模糊地标背景，YOU ARE HERE），去掉作品链接，重点句大字、其余小字放毛玻璃卡片 |

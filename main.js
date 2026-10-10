@@ -1046,74 +1046,91 @@ function playSequence(el, hold = 1500) {
   }, { threshold: 0.15 }).observe(el);
 }
 
-/* ============ About Me ============ */
+/* ============ About Me: a guided tour ============
+   One screen that does not scroll; one stop per paragraph. The wheel, the arrow keys, a swipe,
+   a click (the green pill says NEXT) or the dots move you one stop on. */
 function setupAbout(root) {
-  const list = [...PROJECTS].sort((a, b) => b.year - a.year);
-  const cover = root.querySelector('.ab-cover');
+  const stops = [...root.querySelectorAll('.stop')];
 
-  // the cover: every work is a landmark on one dimmed map; the one nearest the mouse
-  // lights up and shows its name, and opens its work
-  const map = root.querySelector('#a-map');
-  map.innerHTML = list.map((p) => `<a href="${projectUrl(p)}" data-title="${esc(p.title)}"><img src="${thumbSrc(p)}" alt="${esc(p.title)}" decoding="async"></a>`).join('');
-  const pin = root.querySelector('#ab-pin');
-  const tiles = [...map.children];
-  let near = null;
-  if (!TOUCH) {
-    cover.addEventListener('pointermove', (e) => {
-      let best = null, bestD = Infinity;
-      tiles.forEach((t) => {
-        const r = t.getBoundingClientRect();
-        const d = Math.hypot(e.clientX - (r.left + r.width / 2), e.clientY - (r.top + r.height / 2));
-        if (d < bestD) { bestD = d; best = t; }
-      });
-      if (best === near) return;
-      near?.classList.remove('is-near');
-      near = best;
-      near.classList.add('is-near');
-      const r = near.getBoundingClientRect(), c = cover.getBoundingClientRect();
-      pin.textContent = near.dataset.title;
-      pin.style.transform = `translate(${r.left - c.left + 12}px, ${r.top - c.top + 12}px)`;
-      pin.classList.add('is-on');
-    });
-    cover.addEventListener('pointerleave', () => { near?.classList.remove('is-near'); near = null; pin.classList.remove('is-on'); });
-  }
-
-  // the route: words go from dim to white as you read down; the rail marks where you are
-  const texts = [...root.querySelectorAll('[data-reveal-words]')];
-  texts.forEach((p) => {
-    p.innerHTML = p.textContent.split(/(\s+)/).map((w) => (/^\s*$/.test(w) ? w : `<span class="ab-w">${esc(w)}</span>`)).join('');
-    p.__words = [...p.querySelectorAll('.ab-w')];
+  // the large lines: each word rises in after the one before it
+  root.querySelectorAll('[data-words]').forEach((el) => {
+    let i = 0;
+    el.innerHTML = el.textContent.split(/(\s+)/)
+      .map((w) => (/^\s*$/.test(w) ? w : `<span class="w" style="--i:${i++}">${esc(w)}</span>`)).join('');
   });
-  const steps = [...root.querySelectorAll('.ab-step')];
-  const stops = [...root.querySelectorAll('#ab-rail li')];
-  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  let queued = false;
-  const walk = () => {
-    queued = false;
-    texts.forEach((p) => {
-      const r = p.getBoundingClientRect();
-      const t = still ? 1 : Math.min(1, Math.max(0, (innerHeight * 0.85 - r.top) / (r.height + innerHeight * 0.3)));
-      const n = Math.round(t * p.__words.length);
-      p.__words.forEach((w, i) => w.classList.toggle('is-lit', i < n));
-    });
-    // "you are here": the last step whose top has passed the middle of the screen
-    let here = -1;
-    steps.forEach((s, i) => { if (s.getBoundingClientRect().top < innerHeight * 0.55) here = i; });
-    stops.forEach((s, i) => { s.classList.toggle('is-here', i === here); s.classList.toggle('is-past', i < here); });
-  };
-  addEventListener('scroll', () => { if (!queued) { queued = true; requestAnimationFrame(walk); } }, { passive: true });
-  addEventListener('resize', walk);
-  walk();
 
-  // the closing line leads on to the newest work
-  root.querySelector('#a-next').src = coverSrc(list[0]);
-  requestAnimationFrame(() => cover.classList.add('is-in'));
-  setupFollow('.p-next');
+  // behind each stop a different work passes by, blurred, as a landmark (not a link)
+  const list = [...PROJECTS].sort((a, b) => b.year - a.year);
+  const bg = root.querySelector('#tour-bg');
+  bg.innerHTML = stops.map((_, i) => `<img src="${thumbSrc(list[(i * 3) % list.length])}" alt="" decoding="async">`).join('');
+  const bgs = [...bg.children];
+
+  // the dots on the right, and "you are here" beside the current one
+  const dots = document.getElementById('tour-dots');
+  dots.innerHTML = stops.map((_, i) => `<button type="button" aria-label="Stop ${i + 1}"></button>`).join('');
+  const buttons = [...dots.children];
+  const here = document.getElementById('tour-here');
+  const pill = document.getElementById('follow');
+  const nextBtn = document.getElementById('tour-next');
+  const placeHere = () => {
+    const b = buttons[cur];
+    if (b) { const r = b.getBoundingClientRect(); here.style.top = `${r.top + r.height / 2}px`; }
+  };
+
+  let cur = -1;
+  const go = (n) => {
+    n = Math.max(0, Math.min(stops.length - 1, n));
+    if (n === cur) return;
+    cur = n;
+    stops.forEach((s, i) => s.classList.toggle('is-on', i === n));
+    bgs.forEach((b, i) => b.classList.toggle('is-on', i === n));
+    buttons.forEach((b, i) => b.setAttribute('aria-current', String(i === n)));
+    // the current dot grows; place the label once it has (and again on the way)
+    placeHere();
+    setTimeout(placeHere, 460);
+    const label = n === stops.length - 1 ? 'BACK TO START' : 'NEXT';
+    pill.textContent = label;
+    nextBtn.textContent = label;
+  };
+  // one stop per gesture: a short lock stops one long wheel swipe from skipping several
+  let lock = 0;
+  const step = (d) => {
+    const now = performance.now();
+    if (now < lock) return;
+    lock = now + 850;
+    go(d > 0 && cur === stops.length - 1 ? 0 : cur + d);
+  };
+
+  addEventListener('wheel', (e) => {
+    e.preventDefault();
+    if (Math.abs(e.deltaY) + Math.abs(e.deltaX) > 8) step(e.deltaY + e.deltaX > 0 ? 1 : -1);
+  }, { passive: false });
+  addEventListener('keydown', (e) => {
+    if (['ArrowDown', 'ArrowRight', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); step(1); }
+    if (['ArrowUp', 'ArrowLeft', 'PageUp'].includes(e.key)) { e.preventDefault(); step(-1); }
+    if (e.key === 'Home') go(0);
+    if (e.key === 'End') go(stops.length - 1);
+  });
+  let sx = 0, sy = 0;
+  root.addEventListener('touchstart', (e) => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
+  root.addEventListener('touchend', (e) => {
+    const dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
+    if (Math.max(Math.abs(dx), Math.abs(dy)) > 40) step((Math.abs(dy) > Math.abs(dx) ? -dy : -dx) > 0 ? 1 : -1);
+  }, { passive: true });
+  // a click anywhere on the tour (but not on the email) goes on
+  root.addEventListener('click', (e) => { if (!(e.target instanceof Element && e.target.closest('a'))) step(1); });
+  nextBtn.addEventListener('click', () => step(1));
+  buttons.forEach((b, i) => b.addEventListener('click', () => go(i)));
+  addEventListener('resize', placeHere);
+
+  // the green pill is the cursor over the tour, except on the email
+  pillCursor(pill, (t) => !!t.closest('.tour') && !t.closest('a'));
+  requestAnimationFrame(() => go(0));
 }
 
 /* ============ Boot ============ */
 if (document.getElementById('stage')) setupHome();
-const aboutRoot = document.getElementById('about');
+const aboutRoot = document.getElementById('tour');
 if (aboutRoot) setupAbout(aboutRoot);
 const cardsRoot = document.getElementById('cards');
 if (cardsRoot) renderCards(cardsRoot);
