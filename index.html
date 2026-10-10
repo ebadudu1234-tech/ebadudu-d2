@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EBADUDU — Zihe Wang</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Metrophobic&family=Rokkitt:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="home intro-on">
+
+<header class="bar">
+  <a class="glass logo" href="index.html">EBADUDU</a>
+  <nav class="glass links">
+    <a href="work.html">WORK</a>
+    <a href="#">PLAY AREA</a>
+    <a href="#">ABOUT ME</a>
+  </nav>
+</header>
+
+<!-- Begin animation: cards scatter → gather → stack → the first work fills the screen -->
+<div class="intro" id="intro" aria-hidden="true">
+  <div class="intro-stage" id="intro-stage"></div>
+  <span class="skip">click to skip</span>
+</div>
+
+<!-- full-screen slides, one per work -->
+<main class="slides" id="slides"></main>
+
+<nav class="dots" id="dots" aria-label="Slides"></nav>
+<a class="go glass-green" href="work.html">VIEW ALL MY WORK</a>
+
+<script src="media.js"></script>
+<script src="data.js"></script>
+<script src="main.js"></script>
+</body>
+</html>
