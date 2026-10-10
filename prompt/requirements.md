@@ -117,4 +117,4 @@
 | `3ba0ce2` | Restaurant：平面图大图显示，入口和室外并列 |
 | `c0d660a` | Code For Fun 展会大墙和街头海报大图显示（原位置）；`big` 改为在图集原位置全宽显示 |
 | `aecb598` | NEXT WORK 不触碰时不透明度 60% |
-| （本次） | Sónar 封面换成 Visual Stage Design |
+| `2db461a` | Sónar 封面换成 Visual Stage Design |
