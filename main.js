@@ -751,10 +751,10 @@ function createFxLite(canvas) {
 }
 
 /* ============ Begin animation (2s) ============
-   A grey block sits in the middle. Works keep flying in from outside and melt into it:
-   each photo fades to its grey ghost, and the ghosts run through a gooey SVG filter so
-   they stick to the block and merge. The block swells as it swallows them, then keeps
-   growing to full screen while the first work fades in. */
+   Two works fly in from left and right and meet in the middle; their grey ghosts run
+   through a gooey SVG filter, so they stick and merge. Only then does the grey block
+   appear, growing and fading up out of them. More works keep flying in and melt into
+   it as it swells, then it grows to full screen while the first work fades in. */
 async function playIntro(intro) {
   const W = innerWidth, H = innerHeight;
   const DUR = 1800;                                   // + 0.2s fade = 2s in all
@@ -783,18 +783,19 @@ async function playIntro(intro) {
   intro.addEventListener('click', finish);
   addEventListener('keydown', finish, { once: true });
 
-  // the block: appears, swells while swallowing (to 1.3s), then grows to full screen
+  // the block: nothing until the first two works meet (~0.45s), then it grows and fades up
+  // out of them, swells while swallowing the rest (to 1.3s), then grows to full screen
   const grow = [
-    { offset: 0, clipPath: rect(0, 0) },
-    { offset: 0.08, clipPath: rect(w0 * 0.55, h0 * 0.55), easing: 'cubic-bezier(.3, 0, .2, 1)' },
-    { offset: 0.72, clipPath: rect(w0, h0), easing: 'cubic-bezier(.76, 0, .24, 1)' },
-    { offset: 1, clipPath: rect(W, H, 0) },
+    { offset: 0, clipPath: rect(w0 * 0.25, h0 * 0.25), opacity: 0 },
+    { offset: 0.24, clipPath: rect(w0 * 0.25, h0 * 0.25), opacity: 0, easing: 'cubic-bezier(.34, 1.4, .64, 1)' },
+    { offset: 0.38, clipPath: rect(w0 * 0.62, h0 * 0.62), opacity: 1, easing: 'cubic-bezier(.3, 0, .2, 1)' },
+    { offset: 0.72, clipPath: rect(w0, h0), opacity: 1, easing: 'cubic-bezier(.76, 0, .24, 1)' },
+    { offset: 1, clipPath: rect(W, H, 0), opacity: 1 },
   ];
-  grow[0].easing = 'cubic-bezier(.34, 1.5, .64, 1)';
   block.animate(grow, { duration: DUR, fill: 'forwards' });
   // the first work opens through the same shape, fading in while it grows
   reveal.animate(grow.map((k) => ({ ...k, opacity: k.offset < 0.72 ? 0 : k.offset === 1 ? 1 : 0 })), { duration: DUR, fill: 'forwards' });
-  setTimeout(() => !done && text.classList.add('is-on'), 300);
+  setTimeout(() => !done && text.classList.add('is-on'), 650);
   setTimeout(() => text.classList.remove('is-on'), 1250);
 
   // works fly in one after another and melt into the block
@@ -810,16 +811,20 @@ async function playIntro(intro) {
     goo.append(ghost);
     photos.append(photo);
 
-    const ang = (i / pool.length) * Math.PI * 2 + Math.random() * 0.5;
+    // the first two come from left and right at the same time and meet side by side
+    const pair = i < 2;
+    const ang = pair ? (i ? 0 : Math.PI) + (Math.random() - 0.5) * 0.3 : (i / pool.length) * Math.PI * 2 + Math.random() * 0.5;
     const sx = W / 2 + Math.cos(ang) * far - cw / 2, sy = H / 2 + Math.sin(ang) * far - ch / 2;
-    const ex = W / 2 - cw / 2, ey = H / 2 - ch / 2;
+    const ex = W / 2 - cw / 2 + (pair ? (i ? 1 : -1) * cw * 0.32 : 0), ey = H / 2 - ch / 2;
     const r0 = (Math.random() - 0.5) * 60;
     const path = [
       { transform: `translate(${sx}px, ${sy}px) rotate(${r0}deg) scale(1)` },
       { transform: `translate(${ex + (sx - ex) * 0.18}px, ${ey + (sy - ey) * 0.18}px) rotate(${r0 * 0.2}deg) scale(.8)`, offset: 0.7 },
-      { transform: `translate(${ex}px, ${ey}px) rotate(0deg) scale(.3)` },
+      { transform: `translate(${ex}px, ${ey}px) rotate(0deg) scale(${pair ? 0.75 : 0.3})` },   // the pair stays big enough to touch
     ];
-    const timing = { duration: 520, delay: 60 + i * 70, easing: 'cubic-bezier(.3, .1, .3, 1)', fill: 'forwards' };
+    const timing = pair
+      ? { duration: 450, delay: 0, easing: 'cubic-bezier(.3, .1, .3, 1)', fill: 'forwards' }
+      : { duration: 500, delay: 380 + (i - 2) * 70, easing: 'cubic-bezier(.3, .1, .3, 1)', fill: 'forwards' };
     ghost.animate(path, timing);
     photo.animate(path, timing);
     photo.animate([{ opacity: 1 }, { opacity: 1, offset: 0.45 }, { opacity: 0, offset: 0.82 }, { opacity: 0 }], timing);
