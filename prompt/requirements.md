@@ -132,4 +132,4 @@
 | `c60c31f` | 新增 2025 作品 Modular Typefaces（分类系统海报） |
 | `219b836` | 新增 2023 作品 Chayang Old Street Renewal |
 | `ff31818` | 手机端：视频在屏幕上自动静音播放、不用点；首页粒子效果手指离开后恢复 |
-| （本次） | 新增 ABOUT ME 页（Version 2：Let Me Guide You） |
+| `dd52c55` | 新增 ABOUT ME 页（Version 2：Let Me Guide You） |
