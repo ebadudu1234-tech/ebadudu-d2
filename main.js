@@ -931,18 +931,21 @@ function renderProject(root) {
   // `sequence`: images that take turns in one big frame under the intro (e.g. sketch → line → render)
   // `swaps`: pairs that take turns inside a normal gallery image (sketch first); `hide`: left off the site
   const seq = (p.sequence || []).map((i) => media[i]).filter(Boolean);
+  // `big`: images shown on their own, full width, in the same place as the sequence frame
+  const big = (p.big || []).map((i) => media[i]).filter(Boolean);
   const swaps = p.swaps || [];
-  const skip = new Set([heroIdx, ...(p.sequence || []), ...(p.hide || []), ...swaps.flatMap((g) => g.slice(1))]);
+  const skip = new Set([heroIdx, ...(p.sequence || []), ...(p.big || []), ...(p.hide || []), ...swaps.flatMap((g) => g.slice(1))]);
   const rest = [];
   media.forEach((m, i) => {
     if (skip.has(i)) return;
     const g = swaps.find((s) => s[0] === i);
-    rest.push(g ? { ...m, swap: g.map((k) => media[k]).filter(Boolean) } : m);
+    rest.push(g ? { ...m, idx: i, swap: g.map((k) => media[k]).filter(Boolean) } : { ...m, idx: i });
   });
   const seqHtml = seq.length
     ? `<figure class="p-seq" style="--r:${(seq[0].w / seq[0].h).toFixed(4)}">${
       seq.map((m, i) => `<img src="${m.src}" alt="${esc(p.title)}"${i ? '' : ' class="is-on"'} decoding="async">`).join('')}</figure>`
     : '';
+  const bigHtml = big.map((m) => `<figure class="p-seq p-big" style="--r:${(m.w / m.h).toFixed(4)}"><img src="${m.src}" alt="${esc(p.title)}" class="is-on" decoding="async"></figure>`).join('');
 
   const fig = (m, i) => m.swap
     ? `<figure class="swap" style="--r:${(m.w / m.h).toFixed(4)};--d:${i * 0.1}s">${
@@ -950,10 +953,15 @@ function renderProject(root) {
     : m.type === 'video'
     ? `<figure style="--r:${(m.w / m.h).toFixed(4)};--d:${i * 0.1}s"><video src="${m.src}" poster="${m.poster}" controls playsinline preload="none"></video></figure>`
     : `<figure style="--r:${(m.w / m.h).toFixed(4)};--d:${i * 0.1}s"><img src="${m.src}" width="${m.w}" height="${m.h}" alt="${esc(p.title)}" loading="lazy" decoding="async"></figure>`;
+  // two by two; `pairs` (fixed partners) always share a row, so an image before one may stand alone
+  const paired = new Map((p.pairs || []).flatMap(([a, b]) => [[a, b], [b, a]]));
   let rows = '';
-  for (let i = 0; i < rest.length; i += 2) {
-    const pair = rest.slice(i, i + 2);
+  for (let i = 0; i < rest.length;) {
+    const fixedNext = rest[i + 2] && paired.get(rest[i + 1]?.idx) === rest[i + 2].idx;
+    const n = paired.get(rest[i].idx) === rest[i + 1]?.idx || (rest[i + 1] && !fixedNext && !paired.has(rest[i].idx)) ? 2 : 1;
+    const pair = rest.slice(i, i + n);
     rows += `<div class="p-row${pair.length === 1 ? ' single' : ''}">${pair.map(fig).join('')}</div>`;
+    i += n;
   }
 
   const order = [...PROJECTS].sort((a, b) => b.year - a.year);
@@ -968,7 +976,7 @@ function renderProject(root) {
         <p class="p-label">ABOUT THIS WORK</p>
         <div>${(p.text || [p.intro, p.detail].filter(Boolean)).map((t) => `<p class="p-text">${esc(t)}</p>`).join('')}</div>
       </div>
-      ${seqHtml}
+      ${seqHtml}${bigHtml}
       <div class="p-gallery">${rows}</div>
     </div>
     <a class="p-next" href="${projectUrl(next)}"><img src="${coverSrc(next)}" alt="" loading="lazy"><span><small>Next work</small>${esc(next.title)}</span></a>`;
@@ -982,7 +990,7 @@ function renderProject(root) {
   requestAnimationFrame(() => root.querySelector('.p-cover').classList.add('is-in'));
   reveal('.p-row figure, .p-seq');
   setupFollow('.p-next');
-  root.querySelectorAll('.p-seq, figure.swap').forEach((el) => playSequence(el));
+  root.querySelectorAll('.p-seq:not(.p-big), figure.swap').forEach((el) => playSequence(el));
 }
 
 /* The sequence frame: images cross-fade in turn, starting from the first (the sketch)

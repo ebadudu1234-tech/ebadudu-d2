@@ -20,6 +20,8 @@
    sequence  : media items that take turns in one big frame under the intro, in order
    swaps     : pairs [sketch, render] that take turns inside a normal gallery image
    hide      : media items left off the site
+   big       : media items shown on their own, full width, under the intro (e.g. a floor plan)
+   pairs     : [a, b] media items that always sit side by side in one row
    ========================================================= */
 const PROJECTS = [
   {
@@ -171,7 +173,7 @@ const PROJECTS = [
     ],
   },
   {
-    slug: 'restaurant', title: 'Modern Rhythm, Day and Night Change: Restaurant Design', year: 2023, tags: ['INTERIOR'], cover: 0,
+    slug: 'restaurant', title: 'Modern Rhythm, Day and Night Change: Restaurant Design', year: 2023, tags: ['INTERIOR'], cover: 0, big: [1], pairs: [[2, 3]],
     subtitle: 'Interior design, team project | My role: CAD floor plans and colored floor plans',
     text: [
       `A restaurant design for Wanda Jin Street in Sanming, Fujian. Our customers are people aged 20 to 40, mostly born in the 90s, who want a good place to rest and have fun after work.`,

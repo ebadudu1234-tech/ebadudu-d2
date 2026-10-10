@@ -114,3 +114,4 @@
 | `842bbcf` | 用我的文本描述更新作品名、副标题和说明；图集按草图 → 场景 → 小物件 → 周边排序；新增 2023 年的 Restaurant；NEXT WORK 不触碰时不透明度 80%；WORK 卡片小图由 `D1/tools/thumbs.ps1` 生成 |
 | `21d1d70` | 修复返回 WORK 后再点作品卡住（预览服务器并行处理）；标签改为来自描述的类别，VIDEO 自动添加 |
 | `97b1f93` | Restaurant 换成 final renders（封面为艺术装置） |
+| （本次） | Restaurant：平面图大图显示，入口和室外并列 |
