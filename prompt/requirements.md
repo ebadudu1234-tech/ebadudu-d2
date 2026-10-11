@@ -140,4 +140,4 @@
 | `5c181e3` | ABOUT ME 页按参考网站的做法重做（作品地图封面、逐词显现、YOU ARE HERE 路线条） |
 | `e3343aa` | ABOUT ME 换方向：一屏一站的带路参观（滚轮/键盘/滑动/点击走一站，模糊地标背景，YOU ARE HERE），去掉作品链接，重点句大字、其余小字放毛玻璃卡片 |
 | `8e9e929` | ABOUT ME 集中到 3 站：不按段落、按重要程度重组（我是谁+核心观点 / 三个主题 / 结尾），手机为普通滚动页 |
-| （本次） | 新增 tools/skill：Apple Design、Web Design Guidelines、Anti-AI-Slop Writing（stop-slop）三个 skill 的备份（带许可和说明），详见总笔记 |
+| `31afb59` | 新增 tools/skill：Apple Design、Web Design Guidelines、Anti-AI-Slop Writing（stop-slop）三个 skill 的备份（带许可和说明），详见总笔记 |
