@@ -145,3 +145,4 @@
 | `e3343aa` | ABOUT ME 换方向：一屏一站的带路参观（滚轮/键盘/滑动/点击走一站，模糊地标背景，YOU ARE HERE），去掉作品链接，重点句大字、其余小字放毛玻璃卡片 |
 | `8e9e929` | ABOUT ME 集中到 3 站：不按段落、按重要程度重组（我是谁+核心观点 / 三个主题 / 结尾），手机为普通滚动页 |
 | `31afb59` | 新增 tools/skill：Apple Design、Web Design Guidelines、Anti-AI-Slop Writing（stop-slop）三个 skill 的备份（带许可和说明），详见总笔记 |
+| `ab37b88` | 用三个 skill 升级：焦点框、Skip 链接、meta 简介、图片编号说明；按下即反馈；About 滚轮反方向立刻响应、键盘点击不锁；"减少动态效果"只停背景漂移，开场和轮播照常；降低透明度时毛玻璃变实色。详见 5F |
