@@ -836,6 +836,7 @@ async function playIntro(intro) {
   };
   intro.addEventListener('click', finish);
   addEventListener('keydown', finish, { once: true });
+  intro.querySelector('.skip').textContent = TOUCH ? 'Tap to skip' : 'Click to skip';
 
   // build the flying works and decode everything before the first frame moves
   const cw = w0 * 0.5, ch = cw * 0.7;
@@ -911,7 +912,7 @@ function renderCards(root) {
   const list = [...PROJECTS].sort((a, b) => b.year - a.year);
   root.innerHTML = list.map((p, i) => `
     <a class="card" href="${projectUrl(p)}" data-slug="${p.slug}" style="--d:${(i % 3) * 0.07}s">
-      <img src="${thumbSrc(p)}" alt="${esc(p.title)}" loading="lazy" decoding="async">
+      <img src="${thumbSrc(p)}" alt="" loading="lazy" decoding="async">
       <h2 class="card-title">${esc(p.title)}</h2>
       ${tagsHtml(p.tags)}
     </a>`).join('');
@@ -947,11 +948,15 @@ function renderCards(root) {
 function renderProject(root) {
   const p = bySlug(new URLSearchParams(location.search).get('p'));
   if (!p) {
-    root.innerHTML = `<p class="p-missing">Work not found. <a href="work.html">Back to all work →</a></p>`;
+    root.innerHTML = `<p class="p-missing">There is no work at this address. <a href="work.html">See all work →</a></p>`;
     return;
   }
   document.title = `${p.title} — EBADUDU`;
+  document.querySelector('meta[name="description"]')?.setAttribute('content',
+    `${p.title}: ${(p.subtitle || p.tags.join(', ')).split('|')[0].trim()}, ${p.year}. A project by Zihe Wang (EBADUDU).`);
   const media = mediaOf(p);
+  // gallery pictures are named by their place in the work, so a screen reader can tell them apart
+  const altOf = (m) => `${p.title}, ${m.type === 'video' ? 'film' : 'image'} ${(m.idx ?? media.indexOf(m)) + 1} of ${media.length}`;
   const heroIdx = p.hero || 0;
   const hero = media[heroIdx];
   // `sequence`: images that take turns in one big frame under the intro (e.g. sketch → line → render)
@@ -969,17 +974,17 @@ function renderProject(root) {
   });
   const seqHtml = seq.length
     ? `<figure class="p-seq" style="--r:${(seq[0].w / seq[0].h).toFixed(4)}">${
-      seq.map((m, i) => `<img src="${m.src}" alt="${esc(p.title)}"${i ? '' : ' class="is-on"'} decoding="async">`).join('')}</figure>`
+      seq.map((m, i) => `<img src="${m.src}" alt="${esc(altOf(m))}"${i ? '' : ' class="is-on"'} decoding="async">`).join('')}</figure>`
     : '';
 
   // gallery videos: click to play with controls; on a phone they play muted by themselves
   const clipAttrs = TOUCH ? 'muted loop playsinline preload="metadata"' : 'controls playsinline preload="none"';
   const fig = (m, i) => m.swap
     ? `<figure class="swap" style="--r:${(m.w / m.h).toFixed(4)};--d:${i * 0.1}s">${
-      m.swap.map((s, k) => `<img src="${s.src}" alt="${esc(p.title)}"${k ? '' : ' class="is-on"'} loading="lazy" decoding="async">`).join('')}</figure>`
+      m.swap.map((s, k) => `<img src="${s.src}" alt="${esc(altOf(s))}"${k ? '' : ' class="is-on"'} loading="lazy" decoding="async">`).join('')}</figure>`
     : m.type === 'video'
-    ? `<figure style="--r:${(m.w / m.h).toFixed(4)};--d:${i * 0.1}s"><video src="${m.src}" poster="${m.poster}" ${clipAttrs}></video></figure>`
-    : `<figure style="--r:${(m.w / m.h).toFixed(4)};--d:${i * 0.1}s"><img src="${m.src}" width="${m.w}" height="${m.h}" alt="${esc(p.title)}" loading="lazy" decoding="async"></figure>`;
+    ? `<figure style="--r:${(m.w / m.h).toFixed(4)};--d:${i * 0.1}s"><video src="${m.src}" poster="${m.poster}" ${clipAttrs} aria-label="${esc(altOf(m))}"></video></figure>`
+    : `<figure style="--r:${(m.w / m.h).toFixed(4)};--d:${i * 0.1}s"><img src="${m.src}" width="${m.w}" height="${m.h}" alt="${esc(altOf(m))}" loading="lazy" decoding="async"></figure>`;
   // two by two; `pairs` (fixed partners) always share a row, so an image before one may stand alone
   const paired = new Map((p.pairs || []).flatMap(([a, b]) => [[a, b], [b, a]]));
   let rows = '';
@@ -987,8 +992,8 @@ function renderProject(root) {
     const m = rest[i];
     if (bigSet.has(m.idx)) {
       rows += `<figure class="p-seq p-big" style="--r:${(m.w / m.h).toFixed(4)}">${m.type === 'video'
-        ? `<video src="${m.src}" poster="${m.poster}" class="is-on" ${clipAttrs}></video>`
-        : `<img src="${m.src}" alt="${esc(p.title)}" class="is-on" loading="lazy" decoding="async">`}</figure>`;
+        ? `<video src="${m.src}" poster="${m.poster}" class="is-on" ${clipAttrs} aria-label="${esc(altOf(m))}"></video>`
+        : `<img src="${m.src}" alt="${esc(altOf(m))}" class="is-on" loading="lazy" decoding="async">`}</figure>`;
       i += 1;
       continue;
     }
@@ -1019,8 +1024,9 @@ function renderProject(root) {
 
   if (hero && hero.type === 'video') {
     const v = videoEl(hero, p.start, { preload: 'auto' });
-    v.autoplay = true;
+    v.setAttribute('aria-label', p.title);
     root.querySelector('.p-cover .media').append(v);
+    v.autoplay = true;
     v.play().catch(() => {});
   }
   if (TOUCH) root.querySelectorAll('video').forEach(autoplayInView);
@@ -1099,18 +1105,22 @@ function setupAbout(root) {
     pill.textContent = label;
     nextBtn.textContent = label;
   };
-  // one stop per gesture: a short lock stops one long wheel swipe from skipping several
-  let lock = 0;
-  const step = (d) => {
+  // one stop per gesture: while one swipe's wheel events keep coming, its tail is swallowed
+  // (each event holds the lock a little longer), so a long swipe never skips a stop. Keys, taps
+  // and clicks are never held back, and neither is a swipe
+  // the other way: it turns you around at once
+  let lock = 0, lastDir = 0;
+  const step = (d, wheel = false) => {
     const now = performance.now();
-    if (now < lock) return;
-    lock = now + 850;
+    if (wheel && d === lastDir && now < lock) { lock = Math.max(lock, now + 220); return; }
+    lastDir = d;
+    lock = now + 650;
     go(d > 0 && cur === stops.length - 1 ? 0 : cur + d);
   };
 
   addEventListener('wheel', (e) => {
     e.preventDefault();
-    if (Math.abs(e.deltaY) + Math.abs(e.deltaX) > 8) step(e.deltaY + e.deltaX > 0 ? 1 : -1);
+    if (Math.abs(e.deltaY) + Math.abs(e.deltaX) > 8) step(e.deltaY + e.deltaX > 0 ? 1 : -1, true);
   }, { passive: false });
   addEventListener('keydown', (e) => {
     if (['ArrowDown', 'ArrowRight', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); step(1); }

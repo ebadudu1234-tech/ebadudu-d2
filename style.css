@@ -654,3 +654,65 @@ body.tour-page { height: 100vh; height: 100svh; overflow: hidden; }
   /* no mouse to follow: the button sits at the bottom, centred, and can be tapped */
   .go, .go:not(.is-following) { left: 50%; top: auto; bottom: var(--top); translate: -50% 0; pointer-events: auto; }
 }
+
+/* ============ Access & feel (Web Interface Guidelines + Apple design skills) ============ */
+html { color-scheme: dark; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+/* keyboard focus is always visible (a white ring on the black stage); mouse clicks don't draw it */
+:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+.card:focus-visible, .p-next:focus-visible { outline-offset: -4px; }
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+/* the first Tab on every page offers a jump past the bar */
+.skip-link {
+  position: fixed;
+  left: var(--left);
+  top: 12px;
+  z-index: 100;
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: #fff;
+  color: #000;
+  font-weight: 700;
+  font-size: 15px;
+  translate: 0 -200%;
+  transition: translate .25s var(--settle);
+}
+.skip-link:focus { translate: none; }
+/* PLAY AREA is not built yet: it stays in the bar, but leads nowhere */
+.links a[aria-disabled="true"] { cursor: default; }
+.links a[aria-disabled="true"]:hover { font-weight: 400; }
+/* press feedback lands on pointer-down, before the click */
+.logo { transition: background .3s, scale .3s var(--settle); }
+.logo:active { scale: .95; transition-duration: .1s; }
+.links a:not([aria-disabled]):active { opacity: .5; transition-duration: .06s; }
+.dots button:active { scale: .7; transition: scale .1s ease-out; }
+.slide-cap:active { scale: .97; }
+.slide-cap { transition: opacity .5s ease, translate .7s var(--settle), scale .3s var(--settle); }
+.card.is-in:active { scale: .985; transition: scale .12s ease-out; }
+.p-next:active img { transform: scale(1.02); transition-duration: .12s; }
+.tour-next:active { scale: .95; }
+.tour-next { transition: background .2s, scale .3s var(--settle); }
+.a-mail:active { opacity: .6; }
+/* type: headings break into even lines, paragraphs avoid a lonely last word */
+.stop-title, .stop-big, .stop-mid, .p-head h1 { text-wrap: balance; }
+.p-text, .stop-small { text-wrap: pretty; }
+
+/* reduced motion: only the slow background drift stops (see also the tour rules above);
+   the intro, the slideshow and the videos stay */
+@media (prefers-reduced-motion: reduce) {
+  .p-cover .media { scale: none; transition: none; }
+}
+/* reduced transparency: the glass turns solid so words stay easy to read */
+@media (prefers-reduced-transparency: reduce) {
+  .glass, .stop-small.glass, .stop-meta .tags li, .p-head .tags li, .tags li { background: #3a3a3a; -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .glass-green { background: #008a09; -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
